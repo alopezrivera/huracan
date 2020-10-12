@@ -1,19 +1,34 @@
-from utils import *
+from resources.utils_propulsion import *
 
 
-def propeller_power(pbr, nu_p, nu_g, hp=False):
+def propeller(pbp, tbp, k, pi, nu, stage):
+    """
+    :param pbp: Total pressure ante propeller
+    :param tbp: Total temperature ante propeller
+    :param k: Specific heat capacity of gas flowing through propeller
+    :param pi: Propeller pressure ratio
+    :param nu: Propeller isentropic efficiency
+    :param stage: Stage
+    :return: Total pressure and temperature post propeller
+    """
+    p = pbp*pi
+    t = tbp*(1+1/nu*(pi**((k-1)/k)-1))
+    print_color('Propeller', 'green')
+    print(units('T0_{} = {:,.4f}'.format(stage, t), 'K')
+          +
+          units('\np0_{} = {:,.4f}'.format(stage, p), 'Pa')
+          )
+    return p, t
+
+
+def propeller_power(pbr):
     """
     Propeller required power
     :param pbr: Propeller power
-    :param nu_p: Propeller spool efficiency
-    :param nu_g: Propeller gearbox efficiency
-    :param hp: Propeller power in horse power
     :return: Work required by the flow on turbine
     """
-    if hp is True:
-        pbr = pbr*0.735499*1000
-    print(units('Ẇ_prop = {:,.4f}'.format(pbr/(nu_p*nu_g)), 'W'))
-    return pbr/(nu_p*nu_g)
+    print(units('Ẇ_prop = {:,.4f}'.format(pbr), 'W'))
+    return pbr
 
 
 def propeller_thrust(w, nu, v0):
@@ -24,5 +39,7 @@ def propeller_thrust(w, nu, v0):
     :param v0: Free stream velocity
     :return:
     """
-    print(units('T_prop = {:,.4f}'.format(nu*w/v0), 'W'))
-    return nu*w/v0
+    T_prop = nu*w/v0
+    print_color('Propeller thrust', 'yellow')
+    print(units('T_prop = {:,.4f}'.format(nu*w/v0), 'N'))
+    return T_prop

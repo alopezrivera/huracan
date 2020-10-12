@@ -1,9 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from turbofan import Turbofan
-
-from mpl_plotter.two_d import line
-from mpl_plotter.two_d import scatter
+from resources.utils_propulsion import cycle_graph
 
 tf = Turbofan()
 
@@ -51,29 +48,29 @@ tf.w_LPS = 2531
 
 tf.ambient()
 tf.inlet()
-tf.correction(p=36055.4481, t=247.032)
 tf.fan('21')
 tf.hmf()
 tf.lpc('25')
 tf.hpc('3')
+tf.cc('t_given', '4')
 tf.fmf()
-tf.cc('4')
-tf.work()
+tf.work_exerted()
+tf.work_required()
 tf.hpt('45')
 tf.lpt('5')
+tf.pi_nozzle_core()
+tf.pi_nozzle_bypass()
 tf.nozzle_core('8')
 tf.nozzle_bypass('18')
 tf.exit_velocity()
+tf.nozzle_exit_area('8')
 tf.thrust_core()
 tf.thrust_fan()
 
 x, y = zip(*tf.record)
 x, y = np.array(x), np.array(y)
 
-line(x, y, color='grey', line_width=1,
-     more_subplots_left=True, zorder=1, alpha=0.65)
-scatter(ax=plt.gca(), fig=plt.gcf(), x=x, y=y, c=y,
-        point_size=100, zorder=2, cmap='RdYlBu_r',
-        x_tick_number=5, y_tick_number=5, title='Turbofan')
+cycle_graph(x, y, 'Turbofan')
+
 
 

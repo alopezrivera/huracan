@@ -4,30 +4,35 @@ from resources.utils_propulsion import cycle_graph
 
 tf = Turbofan()
 
-tf.h = 15
-tf.M = 0.85
-tf.mf = 737
-tf.bpr = 10
-tf.T0_4 = 1750
+tf.h = None
+tf.M = 0.5
+tf.mf = 210
+tf.bpr = 16
 tf.T_amb = 216.65
-tf.p_amb = 22632
+tf.p_amb = 22614.206687
 
 # pressure ratios
-tf.pi_fan = 1.3
-tf.pi_LPC = 1.6
-tf.pi_HPC = 27
-tf.pi_cc = 0.96
+tf.pi_inlet = 0.97
+tf.pi_fan = 1.58
+tf.pi_LPC = 2.5
+tf.pi_HPC = 14.6
+tf.pi_cc = 0.98
 
 # isentropic efficiencies
-tf.nu_inlet = 0.97
-tf.nu_fan = 0.85
-tf.nu_LPC = 0.9
-tf.nu_HPC = 0.87
-tf.nu_LPT = 0.89
+tf.nu_fan = 0.92
+tf.nu_LPC = 0.89
+tf.nu_HPC = 0.89
 tf.nu_HPT = 0.89
-tf.nu_mech = 0.99
-tf.nu_cc = 0.99
-tf.nu_nozzle = 0.98
+tf.nu_LPT = 0.89
+tf.nu_cc = 0.965
+
+# nozzle efficiencies
+tf.nu_nozzle_core = 0.96
+tf.nu_nozzle_bypass = 0.95
+
+# mechanical efficiencies
+tf.nu_mech = 0.98
+tf.nu_gearbox = 0.975
 
 # constants
 tf.LHV = 43e6
@@ -37,18 +42,16 @@ tf.k_air = 1.4
 tf.k_gas = 1.33
 tf.R = 287
 
-tf.w_LPS = 2531
-
 tf.ambient()
 tf.inlet()
 tf.fan('21')
 tf.hmf()
 tf.lpc('25')
 tf.hpc('3')
-tf.cc('t_given', '4')
-tf.fmf()
 tf.work_exerted()
 tf.work_required()
+tf.cc('w_given', '4')
+tf.fmf()
 tf.hpt('45')
 tf.lpt('5')
 tf.pi_nozzle_core()
@@ -63,7 +66,7 @@ tf.thrust_fan()
 x, y = zip(*tf.record)
 x, y = np.array(x), np.array(y)
 
-cycle_graph(x, y, 'Turbofan')
+# cycle_graph(x, y, 'Turbofan')
 
 
 
