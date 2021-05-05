@@ -32,12 +32,11 @@ def cycle_graph(x, y, title):
     import matplotlib.pyplot as plt
     from mpl_plotter.two_d import line, scatter
 
-    line(x, y, color='grey', line_width=1,
-         more_subplots_left=True, zorder=1, alpha=0.65)
-    scatter(ax=plt.gca(), fig=plt.gcf(), x=x, y=y, c=y,
+    line(x=x, y=y, color='grey', line_width=1, zorder=1, alpha=0.65)
+    scatter(ax=plt.gca(), fig=plt.gcf(), x=x, y=y, norm=y,
             point_size=100, zorder=2, cmap='RdYlBu_r',
             x_tick_number=5, y_tick_number=5, title=title,
-            x_label='p', y_label='T [K]', y_label_rotation=90)
+            x_label='p', y_label='T [K]', y_label_rotation=90, show=True)
 
 
 def out(arg):
