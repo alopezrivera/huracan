@@ -1,6 +1,6 @@
 import numpy as np
 from turboprop import Turboprop
-from resources.utils_propulsion import cycle_graph, hp
+from resources.utils_propulsion import cycle_graph
 
 import matplotlib.pyplot as plt
 from mpl_plotter.two_d import line, scatter
@@ -55,7 +55,7 @@ x, y = np.array(x), np.array(y)
 
 line(x, y, figsize=(10, 5),
      color='black', line_width=2,
-     more_subplots_left=True, zorder=3, alpha=0.85, label='Turboprop')
+     zorder=3, alpha=0.85, label='Turboprop')
 ax = plt.gca()
 fig = plt.gcf()
 

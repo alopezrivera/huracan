@@ -1,6 +1,6 @@
 import numpy as np
 from turboprop import Turboprop
-from resources.utils_propulsion import cycle_graph, hp
+from resources.utils_propulsion import cycle_graph
 
 tp = Turboprop()
 

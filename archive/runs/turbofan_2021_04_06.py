@@ -2,24 +2,20 @@ import numpy as np
 from turbofan import Turbofan
 from resources.utils_propulsion import cycle_graph
 
-"""
-Triple spool implementation shaky
-"""
-
 tf = Turbofan()
 
-tf.h = None
-tf.M = 0.5
-tf.mf = 210
-tf.bpr = 16
-tf.T_amb = 216.65
-tf.p_amb = 22614.206687
+tf.h = 1000
+tf.M = 0.4
+tf.mf = 1440
+tf.bpr = 9.6
+tf.T_amb = 281.65
+tf.p_amb = 89874
 
 # pressure ratios
-tf.pi_inlet = 0.97
-tf.pi_fan = 1.58
-tf.pi_LPC = 2.5
-tf.pi_HPC = 14.6
+tf.pi_inlet = 0.98
+tf.pi_fan = 1.54
+tf.pi_LPC = 1.54
+tf.pi_HPC = 9.61
 tf.pi_cc = 0.98
 
 # isentropic efficiencies

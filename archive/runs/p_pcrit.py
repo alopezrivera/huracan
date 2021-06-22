@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_plotter.two_d import line
+from mpl_plotter.presets.panes import Lines
 
 
 def cpr_air(nu_nozz):
@@ -14,16 +14,19 @@ def cpr_gas(nu_nozz):
 
 
 x = np.linspace(0.2, 1, 100)
-y = list(map(cpr_air, x))
-z = list(map(cpr_gas, x))
+y = cpr_air(x)
+z = cpr_gas(x)
 
-line(x=x, y=y, label='$k_{air}$', color='blue', more_subplots_left=True)
-line(x=x, y=z, label='$k_{gas}$', color='red', more_subplots_left=True, ax=plt.gca(), fig=plt.gcf(),
+plot = Lines().comparison
+plot(x=[x, x], y=[y, z],
+     colors=["blue", "red"], plot_labels=['$k_{air}$', '$k_{gas}$'],
+     # Regular parameters
      title='Critical pressure ratio',
      x_label='$\mu_{nozzle}$',
      y_label='$p/p_{crit}$',
-     y_label_pad=25,
+     y_label_pad=10,
      y_upper_bound=40,
+     legend=False
      )
 plt.gca().axhline(1, label='$p/p_{crit}$=1')
 plt.legend()

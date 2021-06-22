@@ -198,15 +198,14 @@ class Turbofan:
     def exit_velocity(self):
         self.v0 = v0(self.k_air, self.R, self.T_amb, self.M)
         if self.choked_core is True:
-            self.v8 = exit_velocity_choked(self.cp_gas, self.t0_5, self.t8, 'Core')
+            self.v8 = exit_velocity_choked(self.k_gas, self.R, self.t8, 'Core')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_gas, self.R, self.t8, 'Core')
+            self.v8 = exit_velocity_unchoked(self.cp_gas, self.t0_5, self.t8, 'Core')
 
         if self.choked_bypass is True:
-            self.v18 = exit_velocity_choked(self.cp_air, self.t0_21, self.t18, 'Bypass')
+            self.v18 = exit_velocity_choked(self.k_air, self.R, self.t18, 'Bypass')
         else:
-            self.v18 = exit_velocity_unchoked(self.k_air, self.R, self.t18, 'Bypass')
-
+            self.v18 = exit_velocity_unchoked(self.cp_air, self.t0_21, self.t18, 'Bypass')
 
     def nozzle_exit_area(self, stage):
         self.A8 = A_exit(self.hmf+self.fmf, self.t8, self.p8, self.v8, self.R, stage)

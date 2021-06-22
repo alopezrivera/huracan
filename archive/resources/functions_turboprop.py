@@ -41,5 +41,5 @@ def propeller_thrust(w, nu, v0):
     """
     T_prop = nu*w/v0
     print_color('Propeller thrust', 'yellow')
-    print(units('T_prop = {:,.4f}'.format(nu*w/v0), 'N'))
+    print(units('T_prop = {:,.4f}'.format(T_prop), 'N'))
     return T_prop

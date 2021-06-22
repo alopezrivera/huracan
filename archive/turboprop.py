@@ -65,7 +65,7 @@ class Turboprop:
     def efficiencies(self):
         # propeller efficiency
         if not isinstance(self.nu_gearbox, type(None)):
-            self.nu_prop = self.nu_prop*self.nu_gearbox
+            self.nu_prop = self.nu_prop
 
         # combustion chamber efficiency
         if not isinstance(self.nu_comb, type(None)):
@@ -153,13 +153,13 @@ class Turboprop:
         else:
             self.w_C = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_3, 'Compressor')
 
-        print_magnitude('W_prop', self.Pbr, 'W')
+        result('W_prop', self.Pbr, 'W')
 
     def work_exerted_bicomp(self):
         self.w_LPC = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_25, 'LPC')
         self.w_HPC = compr_work(self.mf, self.cp_air, self.t0_25, self.t0_3, 'HPC')
 
-        print_magnitude('W_prop', self.Pbr, 'W')
+        result('W_prop', self.Pbr, 'W')
 
     def work_required_monoturb(self):
         if not isinstance(self.w_HPC, type(None)) and not isinstance(self.w_LPC, type(None)):
@@ -220,9 +220,9 @@ class Turboprop:
 
     def exit_velocity(self):
         if self.choked is True:
-            self.v8 = exit_velocity_choked(self.cp_gas, self.t0_5, self.t8, 'Core')
+            self.v8 = exit_velocity_choked(self.k_gas, self.R, self.t8, 'Core')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_gas, self.R, self.t8, 'Core')
+            self.v8 = exit_velocity_unchoked(self.cp_gas, self.t0_5, self.t8, 'Core')
 
         self.v0 = v0(self.k_air, self.R, self.T_amb, self.M)
 
@@ -230,7 +230,7 @@ class Turboprop:
         self.A8 = A_exit(self.mf+self.fmf, self.t8, self.p8, self.v8, self.R, stage)
 
     def thrust_core(self):
-        self.T_core = flow_thrust(self.mf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p0_0, self.choked)
+        self.T_core = flow_thrust(self.mf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p_amb, self.choked)
 
     def thrust_prop(self):
         self.T_prop = propeller_thrust(self.Pbr, self.nu_prop, self.v0)

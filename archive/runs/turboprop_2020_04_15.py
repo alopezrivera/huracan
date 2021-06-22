@@ -1,6 +1,6 @@
 import numpy as np
 from turboprop import Turboprop
-from resources.utils_propulsion import cycle_graph, hp
+from resources.utils_propulsion import cycle_graph
 
 tp = Turboprop()
 
@@ -40,7 +40,7 @@ tp.prop('1')
 tp.inlet()
 tp.comp('3')
 tp.work_exerted_monocomp('HPC')
-tp.cc_interturbine('4')
+tp.cc('4', 'interturbine')
 tp.fmf()
 tp.work_required_biturb()
 tp.hpt('45')
@@ -56,4 +56,4 @@ tp.sfc()
 x, y = zip(*tp.record)
 x, y = np.array(x), np.array(y)
 
-cycle_graph(x, y, 'Turboprop')
+# cycle_graph(x, y, 'Turboprop')

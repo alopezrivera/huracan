@@ -338,9 +338,25 @@ def choked_nozzle(pbn, tbn, p_pc, k, nu, stage=None):
     return p, t
 
 
-def exit_velocity_choked(cp, tbn, tan, which):
+def exit_velocity_choked(k, R, tan, which):
     """
     Choked exit flow velocity
+    :param k: Specific heat capacity of gas flowing through nozzle
+    :param R: Ideal gas constant (287)
+    :param tan: Total temperature after nozzle
+    :param which: Core or bypass
+    :return: Flow velocity at nozzle exit -core flow velocity-
+    """
+    v = (k * R * tan) ** 0.5
+    den = '8' if which == 'Core' else '18'
+    print_color('{} exit velocity'.format(which), 'yellow')
+    print(units('v{} = {:,.4f}'.format(den, v), 'm/s'))
+    return v
+
+
+def exit_velocity_unchoked(cp, tbn, tan, which):
+    """
+    Unchoked exit flow velocity
     :param cp: Specific heat capacity of hot gas through nozzle
     :param tbn: Total temperature before nozzle
     :param tan: Total temperature after nozzle
@@ -348,22 +364,6 @@ def exit_velocity_choked(cp, tbn, tan, which):
     :return: Flow velocity at nozzle exit -core flow velocity-
     """
     v = (2*cp*(tbn-tan))**0.5
-    den = '8' if which == 'Core' else '18'
-    print_color('{} exit velocity'.format(which), 'yellow')
-    print(units('v{} = {:,.4f}'.format(den, v), 'm/s'))
-    return v
-
-
-def exit_velocity_unchoked(k, R, tan, which):
-    """
-    Unchoked exit flow velocity
-    :param k: Specific heat capacity of gas flowing through nozzle
-    :param R: Ideal gas constant (287)
-    :param tan: Total temperature after nozzle
-    :param which: Core or bypass
-    :return: Flow velocity at nozzle exit -core flow velocity-
-    """
-    v = (k*R*tan)**0.5
     den = '8' if which == 'Core' else '18'
     print_color('{} exit velocity'.format(which), 'yellow')
     print(units('v{} = {:,.4f}'.format(den, v), 'm/s'))
@@ -408,13 +408,13 @@ def flow_thrust(mf, van, v0, A_exit, pan, p0, choked, which='Core'):
     return fn
 
 
-def sfc(tfmf, T_core):
+def sfc(fmf, T_total):
     """
-    :param tfmf: Total fuel mass flow
-    :param T_core: Core flow thrust
+    :param fmf: Fuel mass flow
+    :param T_total: Total thrust
     :return: Specific fuel consumption
     """
-    sfc = tfmf/(T_core)
+    sfc = fmf/(T_total)
     print_color('Specific fuel consumption', 'yellow')
     print(units('SFC = {:,.4f}E-5'.format(sfc*10e4), 'kg/s/N'))
     return sfc
