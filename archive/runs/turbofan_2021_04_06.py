@@ -66,7 +66,7 @@ tf.thrust_fan()
 x, y = zip(*tf.record)
 x, y = np.array(x), np.array(y)
 
-# cycle_graph(x, y, 'Turbofan')
+cycle_graph(x, y, 'Turbofan')
 
 
 

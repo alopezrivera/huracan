@@ -1,5 +1,5 @@
-from resources.functions_propulsion import *
-from resources.functions_turbofan import *
+from archive.resources.functions_propulsion import *
+from archive.resources.functions_turbofan import *
 
 
 class Turbofan:
