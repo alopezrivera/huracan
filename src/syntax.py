@@ -1,4 +1,4 @@
-from src.thermo.gases import gas, fuel
+from src.thermo.gas import gas, fuel
 from placeholder_str import shaft
 from placeholder_comp import inlet, compressor, combustion_chamber, turbine
 from placeholder_mods import recuperator, afterburner

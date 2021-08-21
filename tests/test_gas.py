@@ -1,6 +1,6 @@
 import unittest
 
-from src.thermo.gases import gas, fuel
+from src.thermo.gas import gas
 
 mf = 700
 m = 0.6

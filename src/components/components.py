@@ -1,4 +1,4 @@
-from src.thermo.gases import gas
+from src.thermo.gas import gas
 
 
 class cycle:
@@ -49,9 +49,20 @@ class component:
         setattr(c, stage2, other)
 
 
-class inlet(component):
+class intake(component):
     """
-    COMPONENT: INLET
+    Intake
+
+    Airflow fed directly to engine
+    """
+    pass
+
+
+class inlet(intake):
+    """
+    Inlet
+
+    Diffusion process
     """
     def __init__(self,
                  gas,
@@ -69,6 +80,14 @@ class inlet(component):
 
     def _t(self, t):
         return t
+
+
+class prop(component):
+    pass
+
+
+class fan(component):
+    pass
 
 
 class compressor(component):
