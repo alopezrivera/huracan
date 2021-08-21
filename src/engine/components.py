@@ -1,4 +1,4 @@
-from src.thermo.fluids import gas
+from src.thermo.gases import gas
 
 
 class cycle:
