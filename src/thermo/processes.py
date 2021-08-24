@@ -29,11 +29,11 @@ def absolute(k,
 
     p   = process()
 
-    PI  = (1+(k-1)/2*m**2)**(k/(k-1))
-    TAU = (1+(k-1)/2*m**2)
+    tau = (1+(k-1)/2*m**2)
+    pi  = (1+(k-1)/2*m**2)**(k/(k-1))
 
-    t0 = t_0*TAU
-    p0 = p_0*PI
+    t0 = t_0*tau
+    p0 = p_0*pi
 
     setattr_namespace(p, locals())
 
@@ -76,16 +76,21 @@ def diffusion(mf, cp, k, m, t_0, p_0,
 
     p   = process()
 
-    if isinstance(PI, type(None)):
-        pi = (1+nu*(k-1)/2*m**2)**(k/(k-1))             # Temperature -> Total temperature
-        PI = pi/absolute(k, m, t_0, p_0).PI
+    a = absolute(k, m, t_0, p_0)
+
     if isinstance(TAU, type(None)):
-        TAU = 0
+        TAU = 1
+    if isinstance(PI, type(None)):
+        pi  = (1+nu*(k-1)/2*m**2)**(k/(k-1))       # Pressure -> Total pressure
+        PI  = pi/a.pi
 
-    dt  = t_0*(TAU-1)
+    t00 = a.t0
+    p00 = a.p0
 
-    t01 = t_0
-    p01 = p_0*PI
+    t01 = t00*TAU
+    p01 = p00*PI
+
+    dt  = t00*(TAU-1)
     w   = cp*dt*mf
 
     setattr_namespace(p, locals())
@@ -131,17 +136,17 @@ def compression(mf, cp, k, t00, p00,
     assert not isinstance(PI, type(None)) or not isinstance(TAU, type(None)), \
         "Compression process: neither PI nor TAU have been defined. At least one of them must be defined."
 
-    if isinstance(PI, type(None)):
-        # calculate PI
-        PI = (nu*(TAU-1)+1)**(k/(k-1))
     if isinstance(TAU, type(None)):
         # calculate TAU
         TAU = 1+1/nu*(PI**((k-1)/k)-1)
-
-    dt  = t00*(TAU-1)
+    if isinstance(PI, type(None)):
+        # calculate PI
+        PI = (nu*(TAU-1)+1)**(k/(k-1))
 
     t01 = t00*TAU
     p01 = p00*PI
+
+    dt  = t00*(TAU-1)
     w   = cp*dt*mf
 
     setattr_namespace(p, locals())
@@ -187,17 +192,17 @@ def expansion(mf, cp, k, t00, p00,
     assert not isinstance(PI, type(None)) or not isinstance(TAU, type(None)), \
         "Expansion process: neither PI nor TAU have been defined. At least one of them must be defined."
 
-    if isinstance(PI, type(None)):
-        # calculate PI
-        PI = (1-1/nu*(1-TAU))**(k/(k-1))
     if isinstance(TAU, type(None)):
         # calculate TAU
         TAU = 1-nu*(1-PI**((k-1)/k))
-
-    dt  = t00*(TAU-1)
+    if isinstance(PI, type(None)):
+        # calculate PI
+        PI = (1-1/nu*(1-TAU))**(k/(k-1))
 
     t01 = t00*TAU
     p01 = p00*PI
+
+    dt  = t00*(TAU-1)
     w   = cp*dt*mf
 
     setattr_namespace(p, locals())

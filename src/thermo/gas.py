@@ -1,4 +1,4 @@
-import copy
+from copy import deepcopy
 
 from src.thermo.processes import absolute, diffusion, compression, expansion
 from src.components import cycle, component
@@ -22,7 +22,7 @@ class fluid:
         :return:         [fluid] Core flow
                          [fluid] Diverted flow
         """
-        div_f = copy.deepcopy(fluid)
+        div_f = deepcopy(fluid)
 
         div_f.mf *= fraction
         fluid.mf *= 1 - fraction

@@ -19,4 +19,6 @@ if __name__ == '__main__':
     c1 = compressor(0.95, 2)
     c2 = compressor(0.95, 14)
 
-    c = g-i-i-i-c1-c2-c1-c2
+    c = g-i-c1-c2
+
+    c.run()

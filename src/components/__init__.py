@@ -1,13 +1,30 @@
 import re
+from copy import deepcopy
+
+from src.thermo.processes import process
+
+
+class stage:
+    pass
 
 
 class cycle:
 
-    @classmethod
-    def _concat(cls):
-        pass
+    def _append(self, other, stage_name=None):
+        """
+        Append a component to the cycle.
+        If not provided, the stage name is
+        generated ensuing those of the
+        components already present in the
+        cycle.
 
-    def _stage(self, element, nested=False):
+        :type stage_name: str
+        """
+        s = stage()
+        s.component = other
+        setattr(self, stage_name if not isinstance(stage_name, type(None)) else self._stage_name(other), s)
+
+    def _stage_name(self, element, nested=False):
         """
         Return stage name for a given component
         of a cycle instance.
@@ -34,38 +51,12 @@ class cycle:
 
         return stg_name
 
-    def run(self):
-        """
-        Run all transfer functions in the cycle.
-        """
-        pass
-
-    def t0(self):
-        """
-        Return a vector containing the total
-        temperature at each stage of the cycle.
-        """
-        pass
-
-    def p0(self):
-        """
-        Return a vector containing the total
-        pressure at each stage of the cycle.
-        """
-        pass
-
-    def S(self):
-        """
-        Return a vector containing the
-        entropy at each stage of the cycle.
-        """
-        pass
-
     def __init__(self, gas=None):
+
         if not isinstance(gas, type(None)):
             self.gas = gas
 
-        self.s00 = intake       # Ambient absolute temperature and pressure stage
+        self._append(intake(), 's00')           # Ambient absolute temperature and pressure stage
 
     def __sub__(self, other):
         """
@@ -76,12 +67,8 @@ class cycle:
         :return:     cycle instance
         """
 
-        assert hasattr(self, 'gas'), 'This cycle instance does not have a gas attribute. ' \
-                                     'Set a gas attribute for the cycle instance'
-
         if isinstance(other, component):
-            stage = self._stage(other)
-            setattr(self, stage, other)
+            self._append(other)
             return self
         # elif isinstance(other, cycle):
         #     stage = 'a'
@@ -92,11 +79,89 @@ class cycle:
         # elif isinstance(other, secondary_airflow):
         #     pass
 
-    def __call__(self, gas):
+    def run(self):
+        """
+        Run all transfer functions in the cycle.
+        """
+
+        assert hasattr(self, 'gas'), 'This cycle instance does not have a gas attribute. ' \
+                                     'Set a gas attribute for the cycle instance'
+
+        stages      = [v for k, v in self.__dict__.items() if re.match(r'[s]\d{1,3}', k)]
+        stage_names = [k for k, v in self.__dict__.items() if re.match(r'[s]\d{1,3}', k)]
+
+        # Run
+        for i in range(len(stages)):
+            try:
+                print(stages[i].component.__class__.__name__)
+                print(stages[i].component(self.gas).p01)
+                print(self.gas.p0)
+            except:
+                pass
+            stages[i].process = stages[i].component(self.gas)
+            setattr(self, stage_names[i], stages[i])
+
+        # Cycle values
+        self.t0 = self._t0()
+        self.p0 = self._p0()
+        self.S  = self._S()
+
+    def __call__(self, gas=None):
         """
         Run a cycle.
 
         :type gas: gas
+        """
+
+        if not isinstance(gas, type(None)):
+            gas-self
+
+        self.run()
+
+        return self
+
+    def stage_loop(self, f):
+        """
+        AFTER RUNNING THE CYCLE each stage
+        consists of a process instance
+        containing all calculated values in
+        that stage.
+
+        This function loops through all stages
+        and returns a list with the results of
+        the input function f on each stage.
+
+        :type f: (process) -> any
+
+        :return: map
+        """
+
+        stages = [v for k, v in self.__dict__.items() if re.match(r'[s]\d{1,3}', k)]
+
+        r = []
+        for stage in stages:
+            r.append(f(stage.process))
+
+        return r
+
+    def _t0(self):
+        """
+        Return a vector containing the total
+        temperature at each stage of the cycle.
+        """
+        return self.stage_loop(lambda p: getattr(p, 't01' if hasattr(p, 't01') else 't0'))
+
+    def _p0(self):
+        """
+        Return a vector containing the total
+        pressure at each stage of the cycle.
+        """
+        return self.stage_loop(lambda p: getattr(p, 'p01' if hasattr(p, 'p01') else 'p0'))
+
+    def _S(self):
+        """
+        Return a vector containing the
+        entropy at each stage of the cycle.
         """
         pass
 
@@ -113,10 +178,7 @@ class component:
         """
 
         c = cycle()
-        stage1 = 's0'
-        stage2 = 's1'
-        setattr(c, stage1, self)
-        setattr(c, stage2, other)
+        c-self-other
 
         return c
 
