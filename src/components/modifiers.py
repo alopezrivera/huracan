@@ -1,10 +1,14 @@
-class intercooler:
+class modifyer:
     pass
 
 
-class recuperator:
+class intercooler(modifyer):
     pass
 
 
-class afterburner:
+class recuperator(modifyer):
+    pass
+
+
+class afterburner(modifyer):
     pass

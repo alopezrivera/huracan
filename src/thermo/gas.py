@@ -1,6 +1,7 @@
 import copy
 
 from src.thermo.processes import absolute, diffusion, compression, expansion
+from src.components import cycle, component
 
 
 class fluid:
@@ -8,7 +9,7 @@ class fluid:
     Fluid class
     """
     @classmethod
-    def diversion(cls, fluid, fraction):
+    def _diversion(cls, fluid, fraction):
         """
         Fluid diversion.
 
@@ -40,13 +41,13 @@ class fluid:
         """
         Return two flows representing the diversion.
         """
-        return self.diversion(self, other)
+        return self._diversion(self, other)
 
     def __rmul__(self, other):
         """
         Return two flows representing the diversion.
         """
-        return self.diversion(self, other)
+        return self._diversion(self, other)
 
 
 class gas(fluid):
@@ -88,6 +89,21 @@ class gas(fluid):
         """
         return mixture(self, other)
 
+    def __sub__(self, other):
+        """
+        Cycle creation operator: <gas> + <component/cycle>
+
+        :type other: component or cycle
+
+        :return:     cycle instance
+        """
+        if isinstance(other, component):
+            c = cycle(self)-other
+            return c
+        elif isinstance(other, cycle):
+            other.gas = self
+            return other
+
     def absolute(self):
         """
         Returns the absolute temperature and pressure of a gas
@@ -98,10 +114,10 @@ class gas(fluid):
 
         k   = self.k(self.t_0)
 
-        p = absolute(k  =k,
-                     m  =self.m,
-                     t_0=self.t_0,
-                     p_0=self.p_0)
+        p = absolute(k   = k,
+                     m   = self.m,
+                     t_0 = self.t_0,
+                     p_0 = self.p_0)
 
         self.t0 = p.t0
         self.p0 = p.p0
@@ -112,11 +128,15 @@ class gas(fluid):
                   PI=None,
                   TAU=None):
         """
-        Diffusion process.
+        Diffusion
+        ---------
 
-        Absolute temperature is considered constant through the process.
+        Assumptions:
+        - Adiabatic
+        - Reversible
+        - Temperature remains constant through process
 
-        Absolute pressure change is determined by the total pressure ratio
+        The absolute pressure change is determined by the total pressure ratio
         _PI_ if provided. Else, _PI_ is calculated using the isentropic
         efficiency _nu_.
 
@@ -132,15 +152,15 @@ class gas(fluid):
         k   = self.k(self.t0)
         cp  = self.cp(self.t0)
 
-        p = diffusion(mf =self.mf,
-                      cp =cp,
-                      k  =k,
-                      m=self.m,
-                      t_0=self.t_0,
-                      p_0=self.p_0,
-                      nu =nu,
-                      PI =PI,
-                      TAU=TAU,
+        p = diffusion(mf  = self.mf,
+                      cp  = cp,
+                      k   = k,
+                      m   = self.m,
+                      t_0 = self.t_0,
+                      p_0 = self.p_0,
+                      nu  = nu,
+                      PI  = PI,
+                      TAU = TAU,
                       )
 
         self.t0 = p.t01
@@ -153,7 +173,12 @@ class gas(fluid):
                     TAU=None,
                     ):
         """
-        Compression process.
+        Compression
+        -----------
+
+        Assumptions:
+        - Adiabatic
+        - Reversible
 
         Input pairs:
             - nu, PI
@@ -175,14 +200,14 @@ class gas(fluid):
         k   = self.k(self.t0)
         cp  = self.cp(self.t0)
 
-        p   = compression(mf =self.mf,
-                          cp =cp,
-                          k  =k,
-                          t00=self.t0,
-                          p00=self.p0,
-                          nu =nu,
-                          PI =PI,
-                          TAU=TAU,
+        p   = compression(mf  = self.mf,
+                          cp  = cp,
+                          k   = k,
+                          t00 = self.t0,
+                          p00 = self.p0,
+                          nu  = nu,
+                          PI  = PI,
+                          TAU = TAU,
                           )
 
         self.t0 = p.t01
@@ -195,7 +220,12 @@ class gas(fluid):
                   TAU=None,
                   ):
         """
-        Expansion process.
+        Expansion
+        ---------
+
+        Assumptions:
+        - Adiabatic
+        - Reversible
 
         Input pairs:
             - PI, nu
@@ -217,14 +247,14 @@ class gas(fluid):
         k   = self.k(self.t0)
         cp  = self.cp(self.t0)
 
-        p = expansion(mf =self.mf,
-                      cp =cp,
-                      k  =k,
-                      t00=self.t0,
-                      p00=self.p0,
-                      nu =nu,
-                      PI =PI,
-                      TAU=TAU,
+        p = expansion(mf  = self.mf,
+                      cp  = cp,
+                      k   = k,
+                      t00 = self.t0,
+                      p00 = self.p0,
+                      nu  = nu,
+                      PI  = PI,
+                      TAU = TAU,
                       )
 
         self.t0 = p.t01
@@ -239,37 +269,39 @@ class mixture(gas):
     """
 
     @classmethod
-    def mix_t0(cls, gas1, gas2):
+    def _mix_t0(cls, gas1, gas2):
         """
         Total temperature of fluid mixture.
         """
-        n = gas1.mf * gas1.cp(gas1.t0) * gas1.t0 + gas2.mf * gas2.cp(gas2.t0) * gas2.t0
-        d = gas1.mf * gas1.cp(gas1.t0) + gas2.mf * gas2.cp(gas2.t0)
+        n = gas1.mf*gas1.cp(gas1.t0)*gas1.t0 + gas2.mf*gas2.cp(gas2.t0)*gas2.t0
+        d = gas1.mf*gas1.cp(gas1.t0) + gas2.mf*gas2.cp(gas2.t0)
         t0_f = n / d
         return t0_f
 
     @classmethod
-    def mix_p0(cls, gas1, gas2):
+    def _mix_p0(cls, gas1, gas2):
         """
         Total pressure of fluid mixture.
         """
-        n = gas1.p0 * gas1.mf + gas2.p0 * gas2.mf
+        n = gas1.p0*gas1.mf + gas2.p0*gas2.mf
         d = gas1.mf + gas2.mf
         p0_f = n / d
         return p0_f
 
-    def mix_cp(self, gas1, gas2):
+    @classmethod
+    def _mix_cp(cls, gas1, gas2):
         """
         Constant pressure specific heat at of fluid mixture.
         """
-        cp_f = lambda t: (gas1.cp(t) * gas1.mf + gas2.cp(t) * gas2.mf) / (gas1.mf + gas2.mf)
+        cp_f = lambda t: (gas1.cp(t)*gas1.mf + gas2.cp(t)*gas2.mf) / (gas1.mf + gas2.mf)
         return cp_f
 
-    def mix_k(self, gas1, gas2):
+    @classmethod
+    def _mix_k(cls, gas1, gas2):
         """
         Specific heat ratio of fluid mixture.
         """
-        cp_f = lambda t: (gas1.k(t) * gas1.mf + gas2.k(t) * gas2.mf) / (gas1.mf + gas2.mf)
+        cp_f = lambda t: (gas1.k(t)*gas1.mf + gas2.k(t)*gas2.mf) / (gas1.mf + gas2.mf)
         return cp_f
 
     def __init__(self, gas1, gas2):
@@ -282,43 +314,43 @@ class mixture(gas):
         """
 
         mf = gas1.mf + gas2.mf
-        super().__init__(mf =mf,
-                         cp =self.mix_cp(gas1, gas2),
-                         k  =self.mix_k(gas1, gas2),
-                         m  =0,
-                         t_0=self.mix_t0(gas1, gas2),
-                         p_0=self.mix_p0(gas1, gas2))
-
-        self.t0 = self.mix_t0(gas1, gas2)
-        self.p0 = self.mix_p0(gas1, gas2)
+        super().__init__(mf  = mf,
+                         cp  = self._mix_cp(gas1, gas2),
+                         k   = self._mix_k(gas1, gas2),
+                         m   = 0,
+                         t_0 = self._mix_t0(gas1, gas2),
+                         p_0 = self._mix_p0(gas1, gas2))
 
 
 if __name__ == '__main__':
 
     mf = 700
     m  = 0.6
-
     t  = 288
     p  = 101325
-
     fr = 0
 
-    g = gas(mf=mf,
-            cp=lambda T: 1150 if T > 600 else 1000,
-            k =lambda T: 1.33 if T > 600 else 1.4,
-            m =m, t_0=t, p_0=p)
+    g = gas(mf = mf,
+            cp = lambda T: 1150 if T > 600 else 1000,
+            k  = lambda T: 1.33 if T > 600 else 1.4,
+            m  = m, t_0=t, p_0=p)
 
-    f = gas(mf=mf,
-            cp=lambda T: 1150 if T > 600 else 1000,
-            k =lambda T: 1.33 if T > 600 else 1.4,
-            m=m, t_0=t*fr, p_0=p*fr)
+    f = gas(mf = mf,
+            cp = lambda T: 1150 if T > 600 else 1000,
+            k  = lambda T: 1.33 if T > 600 else 1.4,
+            m  = m, t_0=t*fr, p_0=p*fr)
+
+    k = gas(mf = mf,
+            cp = lambda T: 1500 if T > 1000 else 1200 if T > 800 else 400,
+            k  = lambda T: 1.33 if T > 600 else 1.4,
+            m  = m, t_0=t*fr, p_0=p*fr)
 
     def t_mixture():
         global h
         h = g+f
 
-        assert h.t0 - g.t0/2 < 10e-12
-        assert h.p0 - g.p0/2 < 10e-12
+        assert abs(h.t0 - g.t0/2) < 10e-12
+        assert abs(h.p0 - g.p0/2) < 10e-12
 
     def t_diversion():
         mf = h.mf
@@ -330,4 +362,3 @@ if __name__ == '__main__':
 
     t_mixture()
     t_diversion()
-
