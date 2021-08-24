@@ -7,10 +7,15 @@ class cycle:
     def _concat(cls):
         pass
 
-    def _stage(self, element):
+    def _stage(self, element, nested=False):
         """
         Return stage name for a given component
         of a cycle instance.
+
+        :type element: component
+        :type nested: bool
+
+        :return: Stage name string
         """
 
         start = 's0'
@@ -19,25 +24,15 @@ class cycle:
         # Use regex to match stage names in the form 's<n><n><n>' where <n> may be any numeric character
         stg_names   = [a for a in self.__dict__.keys() if re.match(r'[s]\d{1,3}', a)]
         stg_classes = [v.__class__.__name__ for k, v in self.__dict__.items() if re.match(r'[s]\d{1,3}', k)]
-        stg_number  = stg_classes.count(cls)
-        stg_index   = stg_classes.index(cls) if stg_number > 0 else -1
-
-        # n = 0
-        # for i in range(stg_number):
-        #     if stg_classes[stg_index-i] == cls:
-        #         n += 1
-        #     else:
-        #         break
 
         base = start if len(stg_names) == 0 else stg_names[-1]
-        if cls in ['intake', 'inlet']:
+        if cls in ['intake', 'inlet'] or nested:
             # Nested stage codes
             stg_name = base + str((int(base[-1]) + 1) if len(base) > 2 else 1)
         else:
             stg_name = base[0] + str(int(base[1]) + 1)
 
         return stg_name
-
 
     def run(self):
         """
