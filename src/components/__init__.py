@@ -92,12 +92,6 @@ class cycle:
 
         # Run
         for i in range(len(stages)):
-            try:
-                print(stages[i].component.__class__.__name__)
-                print(stages[i].component(self.gas).p01)
-                print(self.gas.p0)
-            except:
-                pass
             stages[i].process = stages[i].component(self.gas)
             setattr(self, stage_names[i], stages[i])
 
