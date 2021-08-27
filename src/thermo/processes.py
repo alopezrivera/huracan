@@ -12,7 +12,10 @@ def absolute(k,
              m, t_0, p_0):
     """
     Returns the absolute temperature and pressure of a gas
-    flowing at a certain Mach number.
+    flowing at a given
+    - Mach number
+    - Temperature
+    - Pressure
 
     :param k:   [-]  Specific heat ratio
     :param m:   [M]  Flow Mach number
@@ -41,25 +44,25 @@ def absolute(k,
 
 
 def diffusion(mf, cp, k, m, t_0, p_0,
-              nu, PI=None, TAU=None):
+              eta, PI=None, TAU=None):
     """
-    Diffusion process.
+    Diffusion.
 
     Absolute temperature is considered constant through the process.
 
-    Absolute pressure change is determined by the total pressure ratio
+    The absolute pressure change is determined by the total pressure ratio
     _PI_ if provided. Else, _PI_ is calculated using the isentropic
     efficiency _nu_.
 
-    :param mf:  [kg] Mass flow                        | -> Gas characteristics
-    :param cp:  [-]  Constant pressure specific heat  |
-    :param k:   [-]  Specific heat ratio              |
-    :param m:   [M]  Flow Mach number                 |
-    :param t_0: [K]  Initial temperature              |
-    :param p_0:  [Pa] Initial pressure               _|
-    :param nu:  [-]  Isentropic efficiency            | -> Process characteristics
-    :param PI:  [-]  Pressure ratio                   |
-    :param TAU: [-]  Temperature ratio               _|
+    :param mf:  [kg/s] Gas mass flow                    | -> Gas characteristics
+    :param cp:  [-]    Constant pressure specific heat  |
+    :param k:   [-]    Specific heat ratio              |
+    :param m:   [M]    Flow Mach number                 |
+    :param t_0: [K]    Initial temperature              |
+    :param p_0: [Pa]   Initial pressure                _|
+    :param eta: [-]    Isentropic efficiency            | -> Process characteristics
+    :param PI:  [-]    Pressure ratio                   |
+    :param TAU: [-]    Temperature ratio               _|
 
     :type mf:   float
     :type cp:   float
@@ -67,7 +70,7 @@ def diffusion(mf, cp, k, m, t_0, p_0,
     :type m:    float
     :type t_0:  float
     :type p_0:  float
-    :type nu:   float
+    :type eta:  float
     :type PI:   float
     :type TAU:  float
 
@@ -81,7 +84,7 @@ def diffusion(mf, cp, k, m, t_0, p_0,
     if isinstance(TAU, type(None)):
         TAU = 1
     if isinstance(PI, type(None)):
-        pi  = (1+nu*(k-1)/2*m**2)**(k/(k-1))       # Pressure -> Total pressure
+        pi  = (1+eta*(k-1)/2*m**2)**(k/(k-1))       # Pressure -> Total pressure
         PI  = pi/a.pi
 
     t00 = a.t0
@@ -99,32 +102,32 @@ def diffusion(mf, cp, k, m, t_0, p_0,
 
 
 def compression(mf, cp, k, t00, p00,
-                nu, PI=None, TAU=None,
+                eta, PI=None, TAU=None,
                 ):
     """
-    Compression process.
+    Adiabatic compression.
 
     Input pairs:
-        - nu, PI
+        - eta, PI
             - TAU is calculated
-        - nu, TAU
+        - eta, TAU
             - PI is calculated
 
-    :param mf:  [kg] Mass flow                        | -> Gas characteristics
-    :param cp:  [-]  Constant pressure specific heat  |
-    :param k:   [-]  Specific heat ratio              |
-    :param t00: [K]  Initial total temperature        |
-    :param p00: [Pa] Initial total pressure          _|
-    :param nu:  [-]  Isentropic efficiency            | -> Process characteristics
-    :param PI:  [-]  Pressure ratio                   |
-    :param TAU: [-]  Temperature ratio               _|
+    :param mf:  [kg/s] Gas mass flow                    | -> Gas characteristics
+    :param cp:  [-]    Constant pressure specific heat  |
+    :param k:   [-]    Specific heat ratio              |
+    :param t00: [K]    Initial total temperature        |
+    :param p00: [Pa]   Initial total pressure          _|
+    :param eta: [-]    Isentropic efficiency            | -> Process characteristics
+    :param PI:  [-]    Pressure ratio                   |
+    :param TAU: [-]    Temperature ratio               _|
 
     :type mf:   float
     :type cp:   float
     :type k:    float
     :type t00:  float
     :type p00:  float
-    :type nu:   float
+    :type eta:  float
     :type PI:   float
     :type TAU:  float
 
@@ -138,10 +141,10 @@ def compression(mf, cp, k, t00, p00,
 
     if isinstance(TAU, type(None)):
         # calculate TAU
-        TAU = 1+1/nu*(PI**((k-1)/k)-1)
+        TAU = 1+1/eta*(PI**((k-1)/k)-1)
     if isinstance(PI, type(None)):
         # calculate PI
-        PI = (nu*(TAU-1)+1)**(k/(k-1))
+        PI = (eta*(TAU-1)+1)**(k/(k-1))
 
     t01 = t00*TAU
     p01 = p00*PI
@@ -155,32 +158,32 @@ def compression(mf, cp, k, t00, p00,
 
 
 def expansion(mf, cp, k, t00, p00,
-              nu, PI=None, TAU=None,
+              eta, PI=None, TAU=None,
               ):
     """
-    Expansion process.
+    Adiabatic expansion.
 
     Input pairs:
-        - PI, nu
+        - PI, eta
             - TAU is calculated
-        - TAU, nu
+        - TAU, eta
             - PI is calculated
 
-    :param mf:  [kg] Mass flow                        | -> Gas characteristics
-    :param cp:  [-]  Constant pressure specific heat  |
-    :param k:   [-]  Specific heat ratio              |
-    :param t00: [K]  Initial total temperature        |
-    :param p00: [Pa] Initial total pressure          _|
-    :param nu:  [-]  Isentropic efficiency            | -> Process characteristics
-    :param PI:  [-]  Pressure ratio                   |
-    :param TAU: [-]  Temperature ratio               _|
+    :param mf:  [kg/s] Gas mass flow                    | -> Gas characteristics
+    :param cp:  [-]    Constant pressure specific heat  |
+    :param k:   [-]    Specific heat ratio              |
+    :param t00: [K]    Initial total temperature        |
+    :param p00: [Pa]   Initial total pressure          _|
+    :param eta: [-]    Isentropic efficiency            | -> Process characteristics
+    :param PI:  [-]    Pressure ratio                   |
+    :param TAU: [-]    Temperature ratio               _|
 
     :type mf:   float
     :type cp:   float
     :type k:    float
     :type t00:  float
     :type p00:  float
-    :type nu:   float
+    :type eta:  float
     :type PI:   float
     :type TAU:  float
 
@@ -194,16 +197,51 @@ def expansion(mf, cp, k, t00, p00,
 
     if isinstance(TAU, type(None)):
         # calculate TAU
-        TAU = 1-nu*(1-PI**((k-1)/k))
+        TAU = 1-eta*(1-PI**((k-1)/k))
     if isinstance(PI, type(None)):
         # calculate PI
-        PI = (1-1/nu*(1-TAU))**(k/(k-1))
+        PI = (1-1/eta*(1-TAU))**(k/(k-1))
 
     t01 = t00*TAU
     p01 = p00*PI
 
     dt  = t00*(TAU-1)
     w   = cp*dt*mf
+
+    setattr_namespace(p, locals())
+
+    return p
+
+
+def combustion(mf, cp,
+               t00, p00,
+               fuel_mf, fuel_LHV,
+               eta):
+    """
+    Constant pressure heat addition.
+
+    :param mf:       [kg/s] Gas mass flow
+    :param cp:       [-]    Constant pressure specific heat
+    :param t00:      [K]    Initial total temperature
+    :param p00:      [Pa]   Initial total pressure
+    :param fuel_mf:  [kg/s] Fuel mass flow
+    :param fuel_LHV: [J/kg] Fuel Lower Heating Value (heat of combustion)
+    :param eta:      [-]    Isentropic efficiency
+
+    :type mf:        float
+    :type fuel_mf:   float
+    :type fuel_LHV:  float
+    :type t00:       float
+    :type p00:       float
+    :type eta:       float
+    """
+
+    p = process()
+
+    dt = eta*(fuel_mf*fuel_LHV)/(mf*cp)
+
+    t01 = t00 + dt
+    p01 = p00
 
     setattr_namespace(p, locals())
 

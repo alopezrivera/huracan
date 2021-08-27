@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from src.thermo.processes import absolute, diffusion, compression, expansion
-from src.components import cycle, component
+from src.thermo.processes import absolute, diffusion, compression, combustion, expansion
+from src.engine import stream, component
 
 
 class fluid:
@@ -28,14 +28,6 @@ class fluid:
         fluid.mf *= 1 - fraction
 
         return fluid, div_f
-
-    def __init__(self, mf):
-        """
-        :param mf:  [kg] Mass flow
-
-        :type mf:   float
-        """
-        self.mf = mf
 
     def __mul__(self, other):
         """
@@ -71,7 +63,7 @@ class gas(fluid):
         :type t_0:  float
         :type p_0:  float
         """
-        super().__init__(mf)
+        self.mf = mf
         self.cp = cp
         self.k = k
 
@@ -91,16 +83,16 @@ class gas(fluid):
 
     def __sub__(self, other):
         """
-        Cycle creation operator: <gas> + <component/cycle>
+        Stream creation operator: <gas> + <component/stream>
 
-        :type other: component or cycle
+        :type other: component or stream
 
-        :return:     cycle instance
+        :return:     stream instance
         """
         if isinstance(other, component):
-            c = cycle(self)-other
-            return c
-        elif isinstance(other, cycle):
+            s = stream(self)-other
+            return s
+        elif isinstance(other, stream):
             other.gas = self
             return other
 
@@ -124,7 +116,7 @@ class gas(fluid):
 
         return p
 
-    def diffusion(self, nu,
+    def diffusion(self, eta,
                   PI=None,
                   TAU=None):
         """
@@ -140,10 +132,10 @@ class gas(fluid):
         _PI_ if provided. Else, _PI_ is calculated using the isentropic
         efficiency _nu_.
 
-        :param nu:  [-]  Isentropic efficiency
+        :param eta: [-]  Isentropic efficiency
         :param PI:  [-]  Pressure ratio
 
-        :type nu:   float
+        :type eta:  float
         :type PI:   float
 
         :return:    process instance
@@ -158,7 +150,7 @@ class gas(fluid):
                       m   = self.m,
                       t_0 = self.t_0,
                       p_0 = self.p_0,
-                      nu  = nu,
+                      eta = eta,
                       PI  = PI,
                       TAU = TAU,
                       )
@@ -168,7 +160,7 @@ class gas(fluid):
 
         return p
 
-    def compression(self, nu,
+    def compression(self, eta,
                     PI=None,
                     TAU=None,
                     ):
@@ -181,16 +173,16 @@ class gas(fluid):
         - Reversible
 
         Input pairs:
-            - nu, PI
+            - eta, PI
                 - TAU is calculated
-            - nu, TAU
+            - eta, TAU
                 - PI is calculated
 
-        :param nu:  [-]  Isentropic efficiency
+        :param eta: [-]  Isentropic efficiency
         :param PI:  [-]  Pressure ratio
         :param TAU: [-]  Temperature ratio
 
-        :type nu:   float
+        :type eta:  float
         :type PI:   float
         :type TAU:  float
 
@@ -205,7 +197,7 @@ class gas(fluid):
                           k   = k,
                           t00 = self.t0,
                           p00 = self.p0,
-                          nu  = nu,
+                          eta = eta,
                           PI  = PI,
                           TAU = TAU,
                           )
@@ -215,7 +207,7 @@ class gas(fluid):
 
         return p
 
-    def expansion(self, nu,
+    def expansion(self, eta,
                   PI=None,
                   TAU=None,
                   ):
@@ -228,16 +220,16 @@ class gas(fluid):
         - Reversible
 
         Input pairs:
-            - PI, nu
+            - PI, eta
                 - TAU is calculated
-            - TAU, nu
+            - TAU, eta
                 - PI is calculated
 
-        :param nu:  [-]  Isentropic efficiency
+        :param eta: [-]  Isentropic efficiency
         :param PI:  [-]  Pressure ratio
         :param TAU: [-]  Temperature ratio
 
-        :type nu:   float
+        :type eta:  float
         :type PI:   float
         :type TAU:  float
 
@@ -247,20 +239,44 @@ class gas(fluid):
         k   = self.k(self.t0)
         cp  = self.cp(self.t0)
 
-        p = expansion(mf  = self.mf,
-                      cp  = cp,
-                      k   = k,
-                      t00 = self.t0,
-                      p00 = self.p0,
-                      nu  = nu,
-                      PI  = PI,
-                      TAU = TAU,
-                      )
+        p   = expansion(mf  = self.mf,
+                        cp  = cp,
+                        k   = k,
+                        t00 = self.t0,
+                        p00 = self.p0,
+                        eta = eta,
+                        PI  = PI,
+                        TAU = TAU,
+                        )
 
         self.t0 = p.t01
         self.p0 = p.p01
 
         return p
+
+    def heat_addition(self, eta,
+                      fuel_mf,
+                      fuel_LHV):
+        """
+        Constant pressure heat addition
+        -------------------------------
+
+        Assumptions:
+        - Perfect heat addition
+        - Constant pressure
+
+
+        """
+
+        cp = self.cp(self.t0)
+
+        p = combustion(mf       = self.mf,
+                       cp       = cp,
+                       t00      = self.t0,
+                       p00      = self.p0,
+                       fuel_mf  = fuel_mf,
+                       fuel_LHV = fuel_LHV,
+                       eta      = eta)
 
 
 class mixture(gas):

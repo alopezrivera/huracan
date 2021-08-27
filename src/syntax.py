@@ -16,23 +16,21 @@ f = fuel(mf=20,
          LHV=43e6)
 
 # Components
-inlet = inlet()
-compressor1 = compressor()
-compressor2 = compressor()
+inlet              = inlet()
+compressor1        = compressor()
+compressor2        = compressor()
 combustion_chamber = combustion_chamber()
-turbine1 = turbine()
-turbine2 = turbine()
+turbine1           = turbine()
+turbine2           = turbine()
 # Modifiers
-recuperator = recuperator()
-afterburner = afterburner()
+recuperator        = recuperator()
+afterburner        = afterburner()
 
 # Engine geometry
 shaft1 = shaft(compressor1, turbine1)
-shaft2 = shaft(compressor2, compressor2)
+shaft2 = shaft(compressor2, turbine2)
 
-free_power_shaft = shaft(compressor2)
-
-engine = shaft1 | shaft2                        # __ror__
+free_power_shaft = shaft(turbine2)
 
 # Engine cycle
 c = inlet-compressor1-compressor2-combustion_chamber-turbine1-turbine2-afterburner -> cycle object
