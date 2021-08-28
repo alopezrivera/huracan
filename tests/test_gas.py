@@ -1,6 +1,6 @@
 import unittest
 
-from huracan.thermo.gas import gas
+from huracan.thermo.fluids import gas
 
 mf = 700
 m = 0.6

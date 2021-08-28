@@ -39,16 +39,3 @@ def setattr_namespace(o, namespace):
                 and not isinstance(o, value if inspect.isclass(value) else type(value)):  # Avoid _o_, parent of _o_
             # Set namespace variables as attributes of the input object
             setattr(o, key, value)
-
-
-if __name__ == '__main__':
-    class a:
-        pass
-
-    print(type(a))
-
-    b = a()
-
-    c = 1
-
-    setattr_namespace(b, locals())

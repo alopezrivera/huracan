@@ -1,7 +1,7 @@
 import unittest
 
 from huracan.components import inlet, compressor, turbine, nozzle
-from huracan.thermo.gas import gas
+from huracan.thermo.fluids import gas
 
 mf = 700
 m = 0.6
@@ -26,6 +26,6 @@ class TestsFluid(unittest.TestCase):
 
         c.run()
 
-        assert c.s00.process.t0 == c.s01.process.t01  # Inlet - no change in total temperature
-        assert c.s1.process.p01 == 2 * c.s01.process.p01  # Compressor 1
-        assert c.s2.process.p01 == 14 * c.s1.process.p01  # Compressor 2
+        assert c.s00.process.t0 == c.s01.process.t01        # Inlet - no change in total temperature
+        assert c.s1.process.p01 == 2 * c.s01.process.p01    # Compressor 1
+        assert c.s2.process.p01 == 14 * c.s1.process.p01    # Compressor 2
