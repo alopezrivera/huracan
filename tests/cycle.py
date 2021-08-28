@@ -29,7 +29,8 @@ if __name__ == '__main__':
         strm   = i-c     ;    strm(g).run()
         strm_g = g-i-c   ;    strm_g.run()
 
-    strm = g-i-c-cc-t  #-n
+    strm = g-i-c-cc-t
+
     strm.run()
 
     # sstm =
