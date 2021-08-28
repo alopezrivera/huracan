@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from src.engine import component
-from src.thermo.fluids import fuel
+from huracan.engine import component
+from huracan.thermo.fluids import fuel
 
 
 class intake(component):

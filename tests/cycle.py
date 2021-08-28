@@ -1,7 +1,7 @@
 import re
 
-from src.components import inlet, compressor, turbine, nozzle
-from src.thermo.gas import gas
+from huracan.components import inlet, compressor, turbine, nozzle
+from huracan.thermo.gas import gas
 
 
 

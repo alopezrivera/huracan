@@ -1,5 +1,5 @@
-from verification.model_verification.resources.functions_propulsion import *
-from verification.model_verification.resources.utils_propulsion import *
+from tests.verification.model_verification.resources.functions_propulsion import *
+from tests.verification.model_verification.resources.utils_propulsion import *
 
 
 def pi_compression(pi, nu, k, p, t):

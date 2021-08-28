@@ -1,6 +1,6 @@
-from src.thermo.fluids import gas, fuel
-from src.engine import shaft
-from src.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
+from huracan.thermo.fluids import gas, fuel
+from huracan.engine import shaft
+from huracan.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
 
 
 mf = 160

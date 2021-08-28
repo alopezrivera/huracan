@@ -1,6 +1,4 @@
-from alexandria.shell import print_color
-
-from verification.model_verification.resources.utils_propulsion import *
+from tests.verification.model_verification.resources.utils_propulsion import *
 
 
 def hot_mf(bpr, mf):

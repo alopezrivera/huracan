@@ -2,7 +2,7 @@ import re
 import numpy as np
 from copy import deepcopy
 
-from src.thermo.processes import process
+from huracan.thermo.processes import process
 
 
 class component:
@@ -194,8 +194,8 @@ class system:
 
 
 if __name__ == '__main__':
-    from src.thermo.fluids import gas, fuel
-    from src.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
+    from huracan.thermo.fluids import gas, fuel
+    from huracan.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
 
     mf = 700
     m = 0.6

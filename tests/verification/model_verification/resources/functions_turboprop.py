@@ -1,4 +1,4 @@
-from verification.model_verification.resources.utils_propulsion import *
+from tests.verification.model_verification.resources.utils_propulsion import *
 
 
 def propeller(pbp, tbp, k, pi, nu, stage):

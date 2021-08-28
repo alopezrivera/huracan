@@ -1,41 +1,45 @@
-from verification.model_verification.resources.functions_propulsion import *
-from verification.model_verification.resources.functions_turbojet import *
+from tests.verification.model_verification.resources.functions_propulsion import *
+from tests.verification.model_verification.resources.functions_turboprop import *
 
 
-class Turbojet:
+class Turboprop:
 
     def __init__(self):
         self.h = None
         self.M = None
         self.mf = None
+        self.Pbr = None
         self.T0_4 = None
         self.T0_45 = None
         self.dT0_4 = None
-        self.T0_7 = None
         self.T_amb = None
         self.p_amb = None
 
         # pressure ratios
+        self.pi_prop = 1
+        self.pi_inlet = 1
+        self.pi_C = None
         self.pi_LPC = None
         self.pi_HPC = None
         self.pi_cc = None
-        self.pi_inlet = 1
-        self.pi_ab = None
         # self.pi_nozzle_core = None
 
         # isentropic efficiencies
+        self.nu_prop = 1
         self.nu_inlet = 1
+        self.nu_C = None
         self.nu_LPC = None
         self.nu_HPC = None
+        self.nu_T = None
         self.nu_LPT = None
         self.nu_HPT = None
         self.nu_cc = None
         self.nu_comb = None
-        self.nu_ab = None
 
         # nozzle efficiencies
         self.nu_nozzle = None
         self.nu_nozzle_core = None
+        self.nu_nozzle_bypass = None
 
         # mechanical efficiencies
         self.nu_mech = None
@@ -53,15 +57,24 @@ class Turbojet:
 
         self.w_LPS = None
 
+        # Work initialization
+        self.w_LPC = 0
+        self.w_HPC = None
+        self.w_C = None
+
     def efficiencies(self):
-        # nozzle efficiencies
-        self.nu_nozzle_core = self.nu_nozzle if isinstance(self.nu_nozzle_core, type(None)) else self.nu_nozzle_core
+        # propeller efficiency
+        if not isinstance(self.nu_gearbox, type(None)):
+            self.nu_prop = self.nu_prop
 
         # combustion chamber efficiency
         if not isinstance(self.nu_comb, type(None)):
-            self.nu_cc = self.nu_cc * self.nu_comb
+            self.nu_cc = self.nu_cc*self.nu_comb
         elif isinstance(self.nu_cc, type(None)):
             self.nu_cc = self.nu_comb
+
+        # nozzle efficiencies
+        self.nu_nozzle_core = self.nu_nozzle if isinstance(self.nu_nozzle_core, type(None)) else self.nu_nozzle_core
 
         # mechanical efficiencies
         if isinstance(self.nu_mech_LP, type(None)):
@@ -81,10 +94,21 @@ class Turbojet:
 
         self.method_record(self.p0_0, self.t0_0)
 
+    def prop(self, stage):
+        self.p0_1, self.t0_1 = propeller(self.p, self.t, self.k_air, self.pi_prop, self.nu_prop, stage)
+
+        self.method_record(self.p0_1, self.t0_1)
+
     def inlet(self):
         self.p0_2, self.t0_2 = inlet(self.p_amb, self.T_amb, self.M, self.k_air, self.pi_inlet, self.nu_inlet)
 
         self.method_record(self.p0_2, self.t0_2)
+
+    def comp(self, stage):
+        self.p0_3, self.t0_3 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_C, nu=self.nu_C,
+                                          stage=stage, kind='LPC')
+
+        self.method_record(self.p0_3, self.t0_3)
 
     def lpc(self, stage):
         self.p0_25, self.t0_25 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_LPC, nu=self.nu_LPC,
@@ -99,7 +123,7 @@ class Turbojet:
         self.method_record(self.p0_3, self.t0_3)
 
     def fmf(self):
-        self.fmf = fuel_mass_flow(tbc=self.t0_3, tac=self.T0_4, mf=self.mf, cp=self.cp_gas, nu=0.99, lhv=self.LHV)
+        self.fmf = fuel_mass_flow(tbc=self.t0_3, tac=self.T0_4 if not isinstance(self.T0_4, type(None)) else self.t0_4, mf=self.mf, cp=self.cp_gas, nu=self.nu_cc, lhv=self.LHV)
 
     def cc(self, stage, kind='t_given'):
         if kind == 't_given':
@@ -112,22 +136,56 @@ class Turbojet:
             self.p0_4, self.t0_4 = cc_fmf_given(pbcc=self.p, tbcc=self.t, pi=self.pi_cc, mf=self.mf, fmf=self.fmf,
                                                 nu=self.nu_cc, cp=self.cp_gas, LHV=self.LHV, stage=stage)
         if kind == 'w_given':
-            self.p0_4, self.t0_4 = cc_w_given(pbcc=self.p, tbcc=self.t, pi=self.pi_cc, w_HPT=self.w_HPT,
+            self.p0_4, self.t0_4 = cc_w_given(pbcc=self.p, tbcc=self.t, pi=self.pi_cc, w_HPT=self.w_HPT if not isinstance(self.w_HPT, type(None)) else self.w_T,
                                               w_LPT=self.w_LPT,
                                               mf=self.mf, cp=self.cp_gas, nu=self.nu_cc, stage=stage)
         if kind == 'interturbine':
-            self.p0_4, self.t0_4 = cc_t_interturbine(self.p, self.T0_45, self.pi_cc, self.w_HPC, self.mf,
+            self.p0_4, self.t0_4 = cc_t_interturbine(self.p, self.T0_45, self.pi_cc, self.w_HPC if not isinstance(self.w_HPC, type(None)) else self.w_C, self.mf,
                                                      self.cp_gas, self.nu_cc, stage)
 
         self.method_record(self.p0_4, self.t0_4)
 
-    def work_exerted(self):
+    def work_exerted_monocomp(self, which=None):
+        if which == 'LPC':
+            self.w_LPC = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_3, 'LPC')
+        elif which == 'HPC':
+            self.w_HPC = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_3, 'HPC')
+        else:
+            self.w_C = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_3, 'Compressor')
+
+        result('W_prop', self.Pbr, 'W')
+
+    def work_exerted_bicomp(self):
         self.w_LPC = compr_work(self.mf, self.cp_air, self.t0_2, self.t0_25, 'LPC')
         self.w_HPC = compr_work(self.mf, self.cp_air, self.t0_25, self.t0_3, 'HPC')
 
-    def work_required(self):
-        self.w_HPT = turbine_pr(self.w_HPC, self.nu_mech_HP)
-        self.w_LPT = turbine_pr(self.w_LPC, self.nu_mech_LP)
+        result('W_prop', self.Pbr, 'W')
+
+    def work_required_monoturb(self):
+        if not isinstance(self.w_HPC, type(None)) and not isinstance(self.w_LPC, type(None)):
+            w_comp = self.w_HPC+self.w_LPC
+        elif not isinstance(self.w_HPC, type(None)):
+            w_comp = self.w_HPC
+        elif not isinstance(self.w_LPC, type(None)):
+            w_comp = self.w_LPC
+        else:
+            w_comp = self.w_C
+
+        self.w_T = turbine_pr(w_comp+self.Pbr, self.nu_mech_LP)
+
+    def work_required_biturb(self):
+        w_prop = self.Pbr/self.nu_gearbox if not isinstance(self.nu_gearbox, type(None)) else self.Pbr
+        w_LPC = self.w_LPC if not isinstance(self.w_LPC, type(None)) else 0
+
+        self.w_HPT = turbine_pr(self.w_HPC if not isinstance(self.w_HPC, type(None)) else self.w_C, self.nu_mech_HP)
+        self.w_LPT = turbine_pr(w_prop+w_LPC, self.nu_mech_LP)
+
+    def turb(self, stage):
+        self.p0_5, self.t0_5 = turbine(w=self.w_T, mf=self.mf + self.fmf, cp=self.cp_gas, k=self.k_gas,
+                                       nu=self.nu_T, tbt=self.t, pbt=self.p,
+                                       stage=stage, kind='Turbine')
+
+        self.method_record(self.p0_5, self.t0_5)
 
     def hpt(self, stage):
         self.p0_45, self.t0_45 = turbine(w=self.w_HPT, mf=self.mf+self.fmf, cp=self.cp_gas, k=self.k_gas, nu=self.nu_HPT, tbt=self.t, pbt=self.p,
@@ -136,22 +194,10 @@ class Turbojet:
         self.method_record(self.p0_45, self.t0_45)
 
     def lpt(self, stage):
-        self.p0_5, self.t0_5 = turbine(w=self.w_LPT, mf=self.mf+self.fmf, cp=self.cp_gas, k=self.k_gas, nu=self.nu_LPT, tbt=self.t, pbt=self.p,
+        self.p0_5, self.t0_5 = turbine(w=self.Pbr/self.nu_gearbox/self.nu_mech_LP, mf=self.mf+self.fmf, cp=self.cp_gas, k=self.k_gas, nu=self.nu_LPT, tbt=self.t, pbt=self.p,
                                        stage=stage, kind='LPT')
 
         self.method_record(self.p0_5, self.t0_5)
-
-    def afterburner(self, stage):
-        if isinstance(self.T0_7, type(None)):
-            self.p0_7, self.t0_7 = afterburner(self.p, self.p, self.k_gas, self.pi_ab, self.nu_ab, stage)
-        else:
-            self.p0_7, self.t0_7 = afterburner_t_given(self.p, self.T0_7, self.pi_ab, stage)
-
-        self.method_record(self.p0_7, self.t0_7)
-
-    def abmf(self):
-        self.abmf = afterburner_mf(self.t0_5, self.t0_7, self.mf, self.fmf,
-                                   self.nu_ab, self.cp_gas, self.LHV)
 
     def pi_nozzle_core(self):
         self.pi_nozzle_core = pi_nozzle(self.p, self.p_amb, 'Core')
@@ -174,22 +220,23 @@ class Turbojet:
 
     def exit_velocity(self):
         if self.choked is True:
-            self.v8 = exit_velocity_choked(self.cp_gas, self.t0_7, self.t8, 'Core')
+            self.v8 = exit_velocity_choked(self.k_gas, self.R, self.t8, 'Core')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_gas, self.R, self.t8, 'Core')
+            self.v8 = exit_velocity_unchoked(self.cp_gas, self.t0_5, self.t8, 'Core')
 
         self.v0 = v0(self.k_air, self.R, self.T_amb, self.M)
 
     def nozzle_exit_area(self, stage):
-        mf = self.mf+self.fmf if isinstance(self.abmf, type(None)) else self.mf+self.fmf+self.abmf
-        self.A8 = A_exit(mf, self.t8, self.p8, self.v8, self.R, stage)
+        self.A8 = A_exit(self.mf+self.fmf, self.t8, self.p8, self.v8, self.R, stage)
 
     def thrust_core(self):
-        self.T_core = flow_thrust(self.mf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p0_0, self.choked)
+        self.T_core = flow_thrust(self.mf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p_amb, self.choked)
+
+    def thrust_prop(self):
+        self.T_prop = propeller_thrust(self.Pbr, self.nu_prop, self.v0)
 
     def sfc(self):
-        tfmf = self.fmf + self.abmf if not isinstance(self.abmf, type(None)) else self.fmf
-        self.sfc = sfc(tfmf, self.T_core)
+        self.sfc = sfc(self.fmf, self.T_core + self.T_prop)
 
     def method_record(self, p, t):
         self.p = p

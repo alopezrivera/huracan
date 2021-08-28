@@ -1,5 +1,5 @@
-from verification.model_verification.resources.functions_propulsion import *
-from verification.model_verification.resources.functions_turbofan import *
+from tests.verification.model_verification.resources.functions_propulsion import *
+from tests.verification.model_verification.resources.functions_turbofan import *
 
 
 class Turbofan:
@@ -10,21 +10,10 @@ class Turbofan:
         self.mf = None
         self.bpr = None
         self.T0_4 = None
+        self.T0_45 = None
         self.dT0_4 = None
         self.T_amb = None
         self.p_amb = None
-
-        # Intercooler and recuperator
-        self.taic_core = None
-        self.taic_bp = None
-        self.rec_dt = None
-
-        self.E_intercooler = None
-        self.E_recuperator = None
-
-        self.pi_intercooler = None
-        self.pi_recuperator_comp = None
-        self.pi_recuperator_nozz = None
 
         # pressure ratios
         self.pi_fan = None
@@ -78,7 +67,9 @@ class Turbofan:
             self.nu_cc = self.nu_comb
 
         # mechanical efficiencies
-        if isinstance(self.nu_mech_LP, type(None)):
+        if not isinstance(self.nu_mech_LP, type(None)) and not isinstance(self.nu_gearbox, type(None)):
+            self.nu_mech_LP = self.nu_mech_LP * self.nu_gearbox
+        elif isinstance(self.nu_mech_LP, type(None)):
             self.nu_mech_LP = self.nu_mech
 
         if isinstance(self.nu_mech_HP, type(None)):
@@ -111,28 +102,14 @@ class Turbofan:
         self.cmf = self.mf - self.hmf
 
     def lpc(self, stage):
-        self.p0_22, self.t0_22 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_LPC, nu=self.nu_LPC,
+        self.p0_25, self.t0_25 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_LPC, nu=self.nu_LPC,
                                             stage=stage, kind='LPC')
 
-        self.method_record(self.p0_22, self.t0_22)
-
-    def intercooler(self, stage):
-        self.f = intercooler_f(self.E_intercooler, self.hmf, self.cmf,
-                               self.t, self.taic_core,
-                               self.t0_21, self.taic_bp)
-        self.p0_23, self.t0_23 = intercooler_t_given(self.p, self.taic_core, self.pi_intercooler, stage)
-
-        self.method_record(self.p0_23, self.t0_23)
+        self.method_record(self.p0_25, self.t0_25)
 
     def hpc(self, stage):
-        self.p0_24, self.t0_24 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_HPC, nu=self.nu_HPC,
-                                            stage=stage, kind='HPC')
-
-        self.method_record(self.p0_24, self.t0_24)
-
-    def recuperator_heat(self, stage):
-        self.p0_3, self.t0_3 = recuperator_heat(self.E_recuperator, self.t, self.rec_dt, self.cp_air, self.cp_gas,
-                                                self.p, self.pi_recuperator_comp, stage)
+        self.p0_3, self.t0_3 = compressor(pbc=self.p, tbc=self.t, k=self.k_air, pi=self.pi_HPC, nu=self.nu_HPC,
+                                          stage=stage, kind='HPC')
 
         self.method_record(self.p0_3, self.t0_3)
 
@@ -146,6 +123,12 @@ class Turbofan:
         if kind == 'fmf_given':
             self.p0_4, self.t0_4 = cc_fmf_given(pbcc=self.p, tbcc=self.t, pi=self.pi_cc, mf=self.hmf, fmf=self.fmf,
                                                 nu=self.nu_cc, cp=self.cp_gas, LHV=self.LHV, stage=stage)
+        if kind =='w_given':
+            self.p0_4, self.t0_4 = cc_w_given(pbcc=self.p, tbcc=self.t, pi=self.pi_cc, w_HPT=self.w_HPT, w_LPT=self.w_LPT,
+                                              mf=self.hmf, cp=self.cp_gas, nu=self.nu_cc, stage=stage)
+        if kind == 'interturbine':
+            self.p0_4, self.t0_4 = cc_t_interturbine(self.p, self.T0_45, self.pi_cc, self.w_HPC, self.mf,
+                                                     self.cp_gas, self.nu_cc, stage)
 
         self.method_record(self.p0_4, self.t0_4)
 
@@ -153,14 +136,14 @@ class Turbofan:
         self.fmf = fuel_mass_flow(tbc=self.t0_3, tac=self.t0_4, mf=self.hmf, cp=self.cp_gas, nu=self.nu_cc, lhv=self.LHV)
 
     def work_exerted(self):
-        self.w_LPC = compr_work(self.hmf, self.cp_air, self.t0_21, self.t0_22, 'LPC')
-        self.w_HPC = compr_work(self.hmf, self.cp_air, self.t0_23, self.t0_24, 'HPC')
-        self.w_fan = fan_power(self.t0_2, self.t0_21, self.mf, self.cp_air, self.nu_mech_LP, None)
+        self.w_LPC = compr_work(self.hmf, self.cp_air, self.t0_21, self.t0_25, 'LPC')
+        self.w_HPC = compr_work(self.hmf, self.cp_air, self.t0_25, self.t0_3, 'HPC')
+        self.w_fan = fan_power(self.t0_2, self.t0_21, self.mf, self.cp_air)
 
     def work_required(self):
-        fan_w = self.w_fan/self.nu_gearbox if not isinstance(self.nu_gearbox, type(None)) else self.w_fan
+        w_fan = self.w_fan/self.nu_gearbox if not isinstance(self.nu_gearbox, type(None)) else self.w_fan
         self.w_HPT = turbine_pr(self.w_HPC, self.nu_mech_HP, which='HPT')
-        self.w_LPT = turbine_pr(self.w_LPC + fan_w, self.nu_mech_LP)
+        self.w_LPT = turbine_pr(self.w_LPC + w_fan, self.nu_mech_LP)
 
     def hpt(self, stage):
         self.p0_45, self.t0_45 = turbine(w=self.w_HPT, mf=self.hmf+self.fmf, cp=self.cp_gas, k=self.k_gas, nu=self.nu_HPT,
@@ -175,12 +158,6 @@ class Turbofan:
                                        stage=stage, kind='LPT')
 
         self.method_record(self.p0_5, self.t0_5)
-
-    def recuperator_remove(self, stage):
-        self.p0_7, self.t0_7 = recuperator_remove(self.t, self.rec_dt,
-                                                  self.p, self.pi_recuperator_nozz, stage)
-
-        self.method_record(self.p0_7, self.t0_7)
 
     def pi_nozzle_core(self):
         self.pi_nozzle_core = pi_nozzle(self.p, self.p_amb, 'Core')
@@ -221,24 +198,24 @@ class Turbofan:
     def exit_velocity(self):
         self.v0 = v0(self.k_air, self.R, self.T_amb, self.M)
         if self.choked_core is True:
-            self.v8 = exit_velocity_choked(self.cp_gas, self.t0_5, self.t8, 'Core')
+            self.v8 = exit_velocity_choked(self.k_gas, self.R, self.t8, 'Core')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_gas, self.R, self.t8, 'Core')
+            self.v8 = exit_velocity_unchoked(self.cp_gas, self.t0_5, self.t8, 'Core')
 
         if self.choked_bypass is True:
-            self.v18 = exit_velocity_choked(self.cp_air, self.t0_21, self.t18, 'Bypass')
+            self.v18 = exit_velocity_choked(self.k_air, self.R, self.t18, 'Bypass')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_air, self.R, self.t18, 'Bypass')
+            self.v18 = exit_velocity_unchoked(self.cp_air, self.t0_21, self.t18, 'Bypass')
 
     def nozzle_exit_area(self, stage):
         self.A8 = A_exit(self.hmf+self.fmf, self.t8, self.p8, self.v8, self.R, stage)
         self.A18 = A_exit(self.cmf, self.t18, self.p18, self.v18, self.R, '1{}'.format(stage))
 
     def thrust_core(self):
-        self.T_core = flow_thrust(self.hmf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p_amb, self.choked)
+        self.T_core = flow_thrust(self.hmf+self.fmf, self.v8, self.v0, self.A8, self.p8, self.p_amb, self.choked_core)
 
     def thrust_fan(self):
-        self.T_fan = flow_thrust(self.cmf, self.v18, self.v0, self.A18, self.p18, self.p_amb, self.choked, which='Fan')
+        self.T_fan = flow_thrust(self.cmf, self.v18, self.v0, self.A18, self.p18, self.p_amb, self.choked_bypass, which='Fan')
 
     def sfc(self):
         self.sfc = sfc(self.fmf, self.T_core+self.T_fan)

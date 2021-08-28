@@ -1,4 +1,4 @@
-from src.utils import setattr_namespace
+from huracan.utils import setattr_namespace
 
 
 class process:

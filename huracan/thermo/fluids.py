@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from src.thermo.processes import absolute, diffusion, compression, combustion, expansion
-from src.engine import stream, component
+from huracan.thermo.processes import absolute, diffusion, compression, combustion, expansion
+from huracan.engine import stream, component
 
 
 class fluid:
