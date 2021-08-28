@@ -56,9 +56,9 @@ class gas(fluid):
         :param t_0: [K]  Initial temperature   | -> Total pressure and temperature calculated from inputs
         :param p_0: [Pa] Initial pressure      |
 
+        :type mf:   float
         :type cp:   (T: float) -> float
         :type k:    (T: float) -> float
-        :type mf:   float
         :type m:    float
         :type t_0:  float
         :type p_0:  float
@@ -77,9 +77,21 @@ class gas(fluid):
         """
         Mixture creation operator: <gas> + <gas>
 
-        :type other: gas
+        In the case of adding fuel to a gas, the
+        following assumptions are considered:
+        - Total temperature and pressure of gas are
+          unaltered.
+        - Constant pressure specific heat capacity Cp
+          of gas is unaltered.
+        - Ratio of specific heats k of gas is unaltered.
+
+        :type other: gas or fuel
         """
-        return mixture(self, other)
+        if isinstance(other, gas):
+            return mixture(self, other)
+        if isinstance(other, fuel):
+            self.mf += other.mf
+            return self
 
     def __sub__(self, other):
         """
@@ -255,6 +267,7 @@ class gas(fluid):
         return p
 
     def heat_addition(self, eta,
+                      cp,
                       fuel_mf,
                       fuel_LHV):
         """
@@ -265,10 +278,11 @@ class gas(fluid):
         - Perfect heat addition
         - Constant pressure
 
-
+        :param eta:      Isentropic efficiency
+        :param cp:       Specific heat of gas during heat addition
+        :param fuel_mf:  Fuel mass flow
+        :param fuel_LHV: Fuel Lower Heating Value (heat of combustion)
         """
-
-        cp = self.cp(self.t0)
 
         p = combustion(mf       = self.mf,
                        cp       = cp,
@@ -277,6 +291,25 @@ class gas(fluid):
                        fuel_mf  = fuel_mf,
                        fuel_LHV = fuel_LHV,
                        eta      = eta)
+
+        self.t0 = p.t01
+        self.p0 = p.p01
+
+        return p
+
+
+class fuel:
+    """
+    Fuel class
+    """
+    def __init__(self, LHV,
+                 mf=None):
+        """
+        :param LHV: Fuel Lower Heating Value (heat of combustion)
+        :param mf:  Fuel mass flow
+        """
+        self.LHV = LHV
+        self.mf = mf
 
 
 class mixture(gas):

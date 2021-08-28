@@ -14,7 +14,10 @@ class component:
     def __call__(self, gas):
         p = self.tf(gas)
         for k, v in p.__dict__.items():
+            if k[-2:] == '01':
+                k = k[0] + '0'
             setattr(self, k, v)
+
 
 
 class shaft:
@@ -56,8 +59,9 @@ class stream:
         """
         :type gas: gas
         """
+        self.stream_id = 0
         self.components = []
-        self.stream_id  = 0
+        self.downstream = [self]
 
         if not isinstance(gas, type(None)):
             self.gas = gas
@@ -78,6 +82,7 @@ class stream:
     def __sub__(self, other):
         if isinstance(other, component):
             self.components.append(other)
+            other.downstream = self.downstream
             other.stream = self
             return self
         if isinstance(other, stream):
@@ -139,6 +144,16 @@ class stream:
         code = c.__class__.__name__[0] + self._n_instances(c)
         return str(self.stream_id) + code
 
+    def t0(self):
+        return [c.t0 for c in self.components]
+
+    def p0(self):
+        return [c.p0 for c in self.components]
+
+    def S(self):
+        S = lambda t0, p0: 1
+        return [S(t0=c.t0, p0=c.p0) for c in self.components]
+
 
 class system:
     def __init__(self, obj1, obj2):
@@ -179,8 +194,7 @@ class system:
 
 
 if __name__ == '__main__':
-    from src.thermo.gas import gas
-    from src.thermo.fuel import fuel
+    from src.thermo.fluids import gas, fuel
     from src.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
 
     mf = 700
@@ -207,8 +221,7 @@ if __name__ == '__main__':
         strm   = i-c     ;    strm(g).run()
         strm_g = g-i-c   ;    strm_g.run()
 
-
-    strm = g-i-c  #-cc-t-n
+    strm = g-i-c-cc-t  #-n
     strm.run()
 
     # sstm =

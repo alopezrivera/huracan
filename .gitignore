@@ -1,9 +1,9 @@
 # PyCharm directories
 .idea/*
-archive/.idea/*
+model_verification/.idea/*
 src/.idea/*
 
 # pycache
 __pycache__/*
-archive/__pycache__/*
+model_verification/__pycache__/*
 src/__pycache__/*
