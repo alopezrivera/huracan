@@ -1,0 +1,3 @@
+mpl-plotter==4.0.0
+numpy==1.21.2
+Python-Alexandria==2.0.0
