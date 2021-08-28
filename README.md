@@ -1,8 +1,8 @@
 # Huracan
 
-[The API reference is available here.](https://huracan-docs.github.io/).
+[The API reference is available here.](https://huracan-docs.github.io/)
 
-:construction: :construction: **WARNING! Under active construction** :construction: :construction:
+**WARNING! Under active construction** :construction:
 
 ## Install
 
