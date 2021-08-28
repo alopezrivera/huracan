@@ -8,6 +8,10 @@
     
 ## Example script
 
+    from huracan.engine import shaft
+    from huracan.thermo.fluids import gas, fuel
+    from huracan.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
+
     mf = 700
     m = 0.6
     t = 288
