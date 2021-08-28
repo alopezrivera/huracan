@@ -1,12 +1,16 @@
 # Huracan
 
-[The API reference is available here.](https://huracan-docs.github.io/)
+[The API reference is available here.](https://huracan-docs.github.io/).
+
+:construction: :construction: **WARNING! Under active construction** :construction: :construction:
 
 ## Install
 
     pip install huracan
     
 ## Example script
+
+Simple turbojet engine with 2 compressors, 2 shafts and no secondary airflows.
 
     from huracan.engine import shaft
     from huracan.thermo.fluids import gas, fuel
