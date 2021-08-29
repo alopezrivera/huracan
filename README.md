@@ -34,15 +34,11 @@ Simple turbojet engine with 2 compressors, 2 shafts and no secondary airflows.
     cc = combustion_chamber(fuel, 0.98)
     t  = turbine(0.9)
 
-    shft = shaft(c, t, eta=0.8)
+    shaft(c, t, eta=0.8)
 
-    def r_stream_gas_input():
-        strm   = i-c     ;    strm(g).run()
-        strm_g = g-i-c   ;    strm_g.run()
-
-    strm = g-i-c-cc-t
+    stream = g-i-c-cc-t
     
-    strm.run()
+    stream.run()
     
-    print(strm.t0())
-    print(strm.p0())
+    print(stream.t0())
+    print(stream.p0())
