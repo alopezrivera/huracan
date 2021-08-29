@@ -10,7 +10,7 @@
     
 ## Example script
 
-Simple turbojet engine with 2 compressors, 2 shafts and no secondary airflows.
+Simple turbojet engine with 2 compressors and 2 turbines in a 2 shaft configuration and no secondary airflows.
 
     from huracan.engine import shaft
     from huracan.thermo.fluids import gas, fuel
