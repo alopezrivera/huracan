@@ -2,7 +2,7 @@
 
 [The API reference is available here.](https://huracan-docs.github.io/)
 
-**WARNING! Under active construction** :construction:
+:construction: **WARNING! Under active development**
 
 ## Install
 
