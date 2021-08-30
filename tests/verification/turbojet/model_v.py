@@ -1,6 +1,6 @@
 import numpy as np
-from verification.model_verification.turbojet import Turbojet
-from verification.model_verification.resources.utils_propulsion import cycle_graph
+from tests.verification.model_verification.turbojet import Turbojet
+from tests.verification.model_verification.resources.utils_propulsion import cycle_graph
 
 tj = Turbojet()
 
