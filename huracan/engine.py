@@ -1,8 +1,11 @@
-import re
 import numpy as np
-from copy import deepcopy
 
-from huracan.thermo.processes import process
+from mpl_plotter import figure
+from mpl_plotter.two_d import line, scatter, comparison
+from mpl_plotter.color.schemes import colorscheme_one
+from mpl_plotter.color.functions import delta
+
+from huracan.constants import R
 
 
 class component:
@@ -17,7 +20,6 @@ class component:
             if k[-2:] == '01':
                 k = k[0] + '0'
             setattr(self, k, v)
-
 
 
 class shaft:
@@ -145,14 +147,149 @@ class stream:
         return str(self.stream_id) + code
 
     def t0(self):
-        return [c.t0 for c in self.components]
+        """
+        Total temperature vector.
+        """
+        return np.array([c.t0 for c in self.components])
 
     def p0(self):
-        return [c.p0 for c in self.components]
+        """
+        Total pressure vector.
+        """
+        return np.array([c.p0 for c in self.components])
+
+    def v0(self):
+        """
+        Specific total volume vector.
+        """
+        return np.array([c.t0*R/c.p0 for c in self.components])
 
     def S(self):
+        """
+        Specific entropy vector.
+        """
         S = lambda t0, p0: 1
-        return [S(t0=c.t0, p0=c.p0) for c in self.components]
+        return np.array([S(t0=c.t0, p0=c.p0) for c in self.components])
+
+    def plot_T_p(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        """
+        Plot
+        - Total pressure
+        - Total temperature
+        """
+
+        defaults = {'x_label': 'p$_0$ [kPa]',
+                    'y_label': 'T$_0$ [K]'}
+
+        further_custom = {**defaults, **kwargs}
+
+        self.plot_cycle_graph(self.p0()/1000, self.t0(),
+                              color=color,
+                              label=label,
+                              show=show,
+                              # Further customization
+                              x_tick_ndecimals=2,
+                              **further_custom)
+
+    def plot_p_v(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        """
+        Plot
+        - Total specific volume
+        - Total pressure
+        """
+
+        defaults = {'x_label': 'v$_0$ [m$^3$/n]',
+                    'y_label': 'p$_0$ [kPa]'}
+
+        further_custom = {**defaults, **kwargs}
+
+        self.plot_cycle_graph(self.v0(), self.p0()/1000,
+                              color=color,
+                              label=label,
+                              show=show,
+                              # Further customization
+                              y_tick_ndecimals=2,
+                              **further_custom)
+
+    def plot_T_S(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        """
+        Plot
+        - Specific entropy
+        - Total temperature
+        """
+
+        defaults = {'x_label': 'S [J/K/n]',
+                    'y_label': 'T$_0$ [K]'}
+
+        further_custom = {**defaults, **kwargs}
+
+    def plot_cycle_graph(self,
+                         x, y,
+                         label,
+                         x_label, y_label,
+                         color=colorscheme_one()[0],
+                         show=False,
+                         **kwargs
+                         ):
+        """
+        Cycle plot composed of an MPL Plotter line and scatter plot.
+
+        The default arguments plus any valid MPL Plotter line plotting
+        class arguments can be passed to this function.
+        """
+        if not any([k == 'fig' for k in kwargs.keys()]):
+            fig = figure((9, 5))
+        else:
+            fig = kwargs.pop('fig')
+
+        defaults = {
+            # Specifics
+            'point_size': 30,
+            # Markers
+            'marker': 'x',
+            # Color
+            'color': delta(color, -0.3),
+            # Arrangement
+            'zorder': 2,
+            # Further customization
+            'aspect': 1/2,
+            'x_tick_number': 10,
+            'y_tick_number': 10,
+            'demo_pad_plot': True,
+        }
+
+        further_custom = {**defaults, **kwargs}
+
+        # Connecting lines
+        line(   x=x, y=y,
+                # Figure
+                fig=fig,
+                # Specifics
+                line_width=1,
+                # Color
+                color=color, alpha=0.65,
+                # Arrangement
+                zorder=1)
+        # Stages
+        scatter(x=x, y=y,
+                # Further customization
+                plot_label=label,
+                x_label=x_label,
+                y_label=y_label,
+                show=show,
+                **further_custom)
 
 
 class system:
@@ -192,6 +329,51 @@ class system:
     def _append(self):
         pass
 
+    def thrust(self):
+        pass
+
+    def efficiency(self):
+        pass
+
+    def plot_T_p(self):
+
+        plotters = []
+        x        = []
+        y        = []
+
+        for stream in self.streams:
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            x.append(stream.p0())
+            y.append(stream.v0())
+
+        comparison(x=x, y=y, f=plotters)
+
+    def plot_p_v(self):
+
+        plotters = []
+        x        = []
+        y        = []
+
+        for stream in self.streams:
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            x.append(stream.p0())
+            y.append(stream.v0())
+
+        comparison(x=x, y=y, f=plotters)
+
+    def plot_T_S(self):
+
+        plotters = []
+        x        = []
+        y        = []
+
+        for stream in self.streams:
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            x.append(stream.p0())
+            y.append(stream.v0())
+
+        comparison(x=x, y=y, f=plotters)
+
 
 if __name__ == '__main__':
     from huracan.thermo.fluids import gas, fuel
@@ -214,6 +396,7 @@ if __name__ == '__main__':
     c  = compressor(0.9, 14)
     cc = combustion_chamber(fuel, 0.98)
     t  = turbine(0.9)
+    n  = nozzle(0.95)
 
     shft = shaft(c, t, eta=0.8)
 
@@ -221,7 +404,7 @@ if __name__ == '__main__':
         strm   = i-c     ;    strm(g).run()
         strm_g = g-i-c   ;    strm_g.run()
 
-    strm = g-i-c-cc-t  #-n
+    strm = g-i-c-cc-t-n
     strm.run()
 
     # sstm =
