@@ -60,4 +60,3 @@ for i in range(verification_t0.index(1450)):
 
 stream.plot_T_p(show=True, color='blue')
 stream.plot_p_v(show=True, color='orange')
-

@@ -5,16 +5,32 @@ from mpl_plotter.two_d import line, scatter, comparison
 from mpl_plotter.color.schemes import colorscheme_one
 from mpl_plotter.color.functions import delta
 
+from alexandria.shell import print_color, print_result
+from alexandria.data_structs.string import join_set_distance
+
 from huracan.constants import R
+
+"""
+Huracan engine architecture
+"""
 
 
 class component:
+    """
+    Component
+    """
     def __sub__(self, other):
+        """
+        Stream creation operator: <component> - <component>
+        """
         if isinstance(other, component):
             s = stream()-other
             return s
 
     def __call__(self, gas):
+        """
+        Component transfer function execution
+        """
         p = self.tf(gas)
         for k, v in p.__dict__.items():
             if k[-2:] == '01':
@@ -23,7 +39,17 @@ class component:
 
 
 class shaft:
+    """
+    Shaft
+    """
     def __init__(self, *args, eta):
+        """
+        :param args: list of components connected by the shaft.
+        :param eta:  mechanical efficiency of the shaft.
+
+        :type args:  list of component
+        :type eta:   float
+        """
         self.eta = eta
         self.components = list(args)
 
@@ -32,16 +58,17 @@ class shaft:
 
     def w_exerting_machinery(self):
         """
-        Work exerting machinery.
+        Return a list of all components in the shaft
+        which exert work on the flow. That is, instances
+        of the fan and compressor classes.
         """
         return [c for c in self.components if c.__class__.__name__ in ['fan',
                                                                        'compressor']]
 
     def w_r(self):
         """
-        Obtain the work required by the
-        components which exert work on the
-        gas (fan, compressors).
+        Obtain the work required by the components which
+        exert work on the gas (fan, compressors).
         """
         wem  = self.w_exerting_machinery()
 
@@ -57,6 +84,9 @@ class shaft:
 
 
 class stream:
+    """
+    Stream
+    """
     def __init__(self, gas=None):
         """
         :type gas: gas
@@ -103,15 +133,34 @@ class stream:
         self.gas = gas
         return self
 
-    def run(self):
-
+    def run(self, log=True):
+        """
+        Execute the transfer functions of all components in the stream
+        on the instance's gas class instance.
+        """
         assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
 
         for c in self.components:
             c(self.gas)
             c.stage = self._stage_name(c)
 
+        if log:
+            for c in self.components:
+                section_name = join_set_distance(c.stage, c.__class__.__name__.capitalize().replace("_", " "), 6)
+                print_color(section_name, 'green')
+
+                if c.__class__.__name__ == 'nozzle':
+                    if c.PI == 1/c.inv_pi_crit(self.gas):
+                        print_color('      Choked flow', 'red')
+
+                print_result('       T0', c.t0, '[K]')
+                print_result('       p0', c.p0, '[Pa]')
+
     def stages(self):
+        """
+        Return a list containing the stage name of each
+        component in the stream.
+        """
         return [c.stage for c in self.components]
 
     def _n_instances(self, comp):
@@ -135,16 +184,50 @@ class stream:
         :type comp: component
         """
         n = 0
-        # calculate n
+
+        for c in self.components:
+            if comp is c:
+                break
+            if comp.__class__.__name__ == c.__class__.__name__ and comp is not c:
+                n += 1
 
         if n == 1:
-            self.components[0].stage += str(0)
+            for i in range(len(self.components)):
+                if comp.__class__.__name__ == self.components[i].__class__.__name__ and not comp is self.components[i]:
+                    self.components[i].stage += str(0)
 
         return '' if n == 0 else str(n)
 
     def _stage_name(self, c):
-        code = c.__class__.__name__[0] + self._n_instances(c)
-        return str(self.stream_id) + code
+        """
+        Return the stage name of a component in the stream,
+        composed of the stream identification number, a code
+        representing its parent class, and a numerical index
+        if there are more than 1 components of the same class
+        in the stream.
+        """
+        codes = {'intake':             'it',
+                 'inlet':              'il',
+                 'fan':                'fn',
+                 'compressor':         'c',
+                 'combustion_chamber': 'cc',
+                 'turbine':            't',
+                 'afterburner':        'ab',
+                 'nozzle':             'n'
+                 }
+
+        code = codes[c.__class__.__name__] + self._n_instances(c)
+        return f'{self.stream_id}.{code}'
+
+    def fmf(self):
+        """
+        Stream fuel mass flow
+        """
+        fmf = 0
+        for c in self.components:
+            if hasattr(c, 'fuel') and hasattr(c.fuel, 'mf'):
+                fmf += c.fuel.mf
+        return fmf
 
     def t0(self):
         """
