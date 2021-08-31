@@ -55,5 +55,4 @@ Simple turbojet engine with 2 compressors and 2 turbines in a 2 shaft configurat
 | ![alt text](docs/figures/Tp.png "T-p plot") |
 | --- |
 | ![alt text](docs/figures/pv.png "p-v plot") |
-
-![alt text](docs/figures/log.png "console log")
+| ![alt text](docs/figures/log.png "console log") |
