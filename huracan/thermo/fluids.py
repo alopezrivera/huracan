@@ -1,7 +1,8 @@
 from copy import deepcopy
 
-from huracan.thermo.processes import absolute, diffusion, compression, combustion, expansion
+from huracan.constants import R
 from huracan.engine import stream, component
+from huracan.thermo.processes import absolute, diffusion, compression, combustion, expansion
 
 
 class fluid:
@@ -63,11 +64,13 @@ class gas(fluid):
         :type t_0:  float
         :type p_0:  float
         """
-        self.mf = mf
-        self.cp = cp
-        self.k = k
+        self.mf  = mf
+        self.cp  = cp
+        self.k   = k
 
-        self.m = m
+        self.m   = m
+        self.v_0 = m*(k(t_0)*R*t_0)**0.5
+
         self.t_0 = t_0
         self.p_0 = p_0
 

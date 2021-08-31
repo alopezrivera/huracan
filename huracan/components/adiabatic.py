@@ -120,6 +120,8 @@ class nozzle(component):
         self.eta = eta
         self.PI  = PI
 
+        self.choked = False
+
     def tf(self, gas):
         return gas.expansion(eta=self.eta, PI=self.pi(gas), TAU=None)
 
@@ -135,8 +137,14 @@ class nozzle(component):
         the nozzle pressure ratio will not exceed the critical pressure
         ratio.
         """
-        PI_inv = gas.p_0/gas.p0 if isinstance(self.PI, type(None)) else 1/self.PI
-        PI     = 1/PI_inv if PI_inv > self.inv_pi_crit(gas) else 1/self.inv_pi_crit(gas)
+        inv_PI = gas.p0/gas.p_0 if isinstance(self.PI, type(None)) else 1/self.PI
+
+        if inv_PI > self.inv_pi_crit(gas):
+            PI = 1/self.inv_pi_crit(gas)
+            self.choked = True
+        else:
+            PI = 1/inv_PI
+
         return PI
 
     def inv_pi_crit(self, gas):

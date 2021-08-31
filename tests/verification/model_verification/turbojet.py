@@ -173,10 +173,10 @@ class Turbojet:
         self.method_record(self.p8, self.t8)
 
     def exit_velocity(self):
-        if self.choked is True:
-            self.v8 = exit_velocity_choked(self.cp_gas, self.t0_7, self.t8, 'Core')
+        if self.choked:
+            self.v8 = exit_velocity_choked(self.k_gas, self.R, self.t0_7, 'Core')
         else:
-            self.v8 = exit_velocity_unchoked(self.k_gas, self.R, self.t8, 'Core')
+            self.v8 = exit_velocity_unchoked(self.cp_gas, self.t0_7, self.t8, 'Core')
 
         self.v0 = v0(self.k_air, self.R, self.T_amb, self.M)
 

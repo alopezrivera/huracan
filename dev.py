@@ -2,7 +2,7 @@ from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
 from huracan.components import inlet, compressor, combustion_chamber, turbine, afterburner, nozzle
 
-mf = 160
+mf= 160
 M = 0
 t = 288
 p = 101325
@@ -35,6 +35,11 @@ stream.run()
 model_t0 = stream.t0()
 model_p0 = stream.p0()
 
-stream.plot_T_p(show=True, color='blue')
-stream.plot_p_v(show=True, color='orange')
+# stream.plot_T_p(show=True, color='blue')
+# stream.plot_p_v(show=True, color='orange')
 
+assert stream.v_exit() - 840.3353 < 10e-5, stream.v() - 840.3353
+
+print(stream.v_exit())
+print(stream.A_exit())
+print(stream.thrust())
