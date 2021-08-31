@@ -257,10 +257,11 @@ class stream:
         else:
 
             assert t_before_nozzle - self.gas.t0 > 0, 'The total temperature of the flow is lower before ' \
-                                                      'the nozzle than after: this happens due to the compressors' \
-                                                      'not providing enough energy to the flow. You must either ' \
-                                                      'increase the pressure ratio of the compressors or decrease ' \
-                                                      'the power extracted from the flow to solve the inconsistency.'
+                                                      'the nozzle tha outside the engine: this happens due to the ' \
+                                                      'compressors not providing enough energy to the flow. You must ' \
+                                                      'either increase the pressure ratio of the compressors or ' \
+                                                      'decrease the power extracted from the flow to solve the ' \
+                                                      'inconsistency.'
 
             return (2*self.gas.cp(t_before_nozzle)*(t_before_nozzle - self.gas.t0))**0.5    # Heat -> Kinetic energy
 
