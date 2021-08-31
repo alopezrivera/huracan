@@ -256,13 +256,19 @@ class stream:
     def thrust(self):
         """
         Flow thrust
-        """
-        p_before_nozzle = self.components[-2].p0
 
+        If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
+        """
         if self.choked:
             return self.gas.mf*(self.v_exit()-self.gas.v_0) + self.A_exit()*(self.gas.p0-self.gas.p_0)
         else:
             return self.gas.mf*(self.v_exit()-self.gas.v_0)
+
+    def sfc(self):
+        """
+        Specific fuel consumption
+        """
+        return self.fmf()/self.thrust()
 
     def efficiency(self):
         pass
