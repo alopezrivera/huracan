@@ -61,12 +61,15 @@ class shaft:
         return [c for c in self.components if c.__class__.__name__ in ['fan',
                                                                        'compressor']]
 
+    def electrical_plants(self):
+        return [c for c in self.components if c.__class__.__name__ in ['power_plant']]
+
     def w_r(self):
         """
         Obtain the work required by the components which
         exert work on the gas (fan, compressors).
         """
-        wem  = self.w_exerting_machinery()
+        wem = self.w_exerting_machinery()
 
         assert all([hasattr(c, 'w') for c in wem]), \
             "The shaft's work exerting components do not have " \
@@ -76,7 +79,12 @@ class shaft:
 
         work = np.array([c.w for c in wem])
         etas = np.array([c.shaft.eta for c in wem])
-        return np.sum(work*etas)
+        w_r_m = np.sum(work*etas)                           # Power required by work exerting components
+
+        electrical = self.electrical_plants()               # FIXME: ugly
+        w_r_e = sum([c.w_r for c in electrical])            # Power required by all electrical plants
+
+        return w_r_m + w_r_e
 
 
 class stream:
@@ -94,7 +102,7 @@ class stream:
         if not isinstance(gas, type(None)):
             self.gas = gas
 
-    # def aux(self):
+    # def aux(self):                                 # TODO: figure out
     #     """
     #     Create stream
     #
@@ -113,16 +121,16 @@ class stream:
             other.downstream = self.downstream
             other.stream = self
             return self
-        if isinstance(other, stream):
+        if isinstance(other, stream):               # TODO: stream merge
             pass
-        if isinstance(other, system):
+        if isinstance(other, system):               # TODO: system merge
             system.parent(self)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other):                      # TODO: infeeding stream merge. Figure out if needed
         if isinstance(other, stream):
             pass
 
-    def __mul__(self, other):
+    def __mul__(self, other):                       # TODO: stream diversion
         pass
 
     def __call__(self, gas):
@@ -136,11 +144,13 @@ class stream:
         """
         assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
 
+        self.choked = False                                 # FIXME: choked flow implementation is ugly
+
         for c in self.components:
             c(self.gas)
             c.stage = self._stage_name(c)
 
-            if hasattr(c, 'choked') and c.choked:
+            if hasattr(c, 'choked') and c.choked:           # FIXME: ugly
                 self.choked = c.choked
 
         if log:
@@ -166,11 +176,11 @@ class stream:
         codes = {'intake':             'it',
                  'inlet':              'il',
                  'fan':                'fn',
-                 'compressor':         'c',
+                 'compressor':         'cp',
                  'combustion_chamber': 'cc',
-                 'turbine':            't',
+                 'turbine':            'tb',
                  'afterburner':        'ab',
-                 'nozzle':             'n'
+                 'nozzle':             'nz'
                  }
 
         code = codes[c.__class__.__name__] + self._n_instances(c)
@@ -243,8 +253,15 @@ class stream:
         t_before_nozzle = self.components[-2].t0
 
         if self.choked:
-            return (self.gas.k(t_before_nozzle)*R*t_before_nozzle)**0.5                     # M=1 at nozzle exit
+            return (self.gas.k(t_before_nozzle)*R*t_before_nozzle)**0.5     # M=1 immediately before nozzle exit
         else:
+
+            assert t_before_nozzle - self.gas.t0 > 0, 'The total temperature of the flow is lower before ' \
+                                                      'the nozzle than after: this happens due to the compressors' \
+                                                      'not providing enough energy to the flow. You must either ' \
+                                                      'increase the pressure ratio of the compressors or decrease ' \
+                                                      'the power extracted from the flow to solve the inconsistency.'
+
             return (2*self.gas.cp(t_before_nozzle)*(t_before_nozzle - self.gas.t0))**0.5    # Heat -> Kinetic energy
 
     def A_exit(self):
@@ -291,7 +308,7 @@ class stream:
         """
         return np.array([c.t0*R/c.p0 for c in self.components])
 
-    def S(self):
+    def S(self):                                        # TODO: implement entropy
         """
         Specific entropy vector.
         """
@@ -346,7 +363,7 @@ class stream:
                               y_tick_ndecimals=2,
                               **further_custom)
 
-    def plot_T_S(self,
+    def plot_T_S(self,                              # TODO: implement
                  show=False,
                  label=None,
                  color=colorscheme_one()[0],
@@ -420,7 +437,7 @@ class stream:
 
 
 class system:
-    def __init__(self, obj1, obj2):
+    def __init__(self, obj1, obj2):                 # TODO: test system creation
         """
         Create a system from two objects.
 
@@ -431,17 +448,20 @@ class system:
         self.stream  = obj1-obj2
 
     def __sub__(self, other):
-        if isinstance(other, component):
+        if isinstance(other, component):            # TODO: implement system component addition
             return self.stream-other
-        if isinstance(other, stream):
+        if isinstance(other, stream):               # TODO: implement system-stream merge
             return self
-        if isinstance(other, system):
+        if isinstance(other, system):               # TODO: implement system-system merge
             pass
 
-    def __mul__(self, other):
+    def __mul__(self, other):                       # TODO: implement system diversion
         pass
 
-    def __call__(self, suppress_output):
+    def __call__(self, suppress_output):            # TODO: implement system run
+        pass
+
+    def _append(self):                              # TODO: system object append implementation
         pass
 
     def _parent(self, obj):
@@ -453,10 +473,7 @@ class system:
         """
         self.parents.append(obj)
 
-    def _append(self):
-        pass
-
-    def plot_T_p(self):
+    def plot_T_p(self):                             # TODO: implement diagram integrating all streams
 
         plotters = []
         x        = []
@@ -469,7 +486,7 @@ class system:
 
         comparison(x=x, y=y, f=plotters)
 
-    def plot_p_v(self):
+    def plot_p_v(self):                             # TODO: implement diagram integrating all streams
 
         plotters = []
         x        = []
@@ -482,7 +499,7 @@ class system:
 
         comparison(x=x, y=y, f=plotters)
 
-    def plot_T_S(self):
+    def plot_T_S(self):                             # TODO: implement diagram integrating all streams
 
         plotters = []
         x        = []
@@ -494,38 +511,3 @@ class system:
             y.append(stream.V())
 
         comparison(x=x, y=y, f=plotters)
-
-
-if __name__ == '__main__':
-    from huracan.thermo.fluids import gas, fuel
-    from huracan.components import intake, inlet, compressor, combustion_chamber, turbine, nozzle
-
-    mf = 700
-    m = 0.6
-    t = 288
-    p = 101325
-    fr = 0
-
-    fuel = fuel(LHV=43e6)
-
-    g = gas(mf=mf,
-            cp=lambda T: 1150 if T > 600 else 1000,
-            k=lambda T: 1.33 if T > 600 else 1.4,
-            m=m, t_0=t, p_0=p)
-
-    i  = inlet(0.95)
-    c  = compressor(0.9, 14)
-    cc = combustion_chamber(fuel, 0.98)
-    t  = turbine(0.9)
-    n  = nozzle(0.95)
-
-    shft = shaft(c, t, eta=0.8)
-
-    def r_stream_gas_input():
-        strm   = i-c     ;    strm(g).run()
-        strm_g = g-i-c   ;    strm_g.run()
-
-    strm = g-i-c-cc-t-n
-    strm.run()
-
-    # sstm =
