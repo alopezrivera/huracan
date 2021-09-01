@@ -37,8 +37,8 @@ stream.run()
 model_t0 = stream.t0()
 model_p0 = stream.p0()
 
-stream.plot_T_p(show=True, color='purple')
-stream.plot_p_v(show=True, color='orange')
+# stream.plot_T_p(show=True, color='purple')
+# stream.plot_p_v(show=True, color='orange')
 
 assert stream.v_exit() - 840.3353 < 10e-5, stream.v_exit() - 840.3353
 
