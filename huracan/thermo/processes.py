@@ -44,7 +44,9 @@ def absolute(k,
 
 
 def diffusion(mf, cp, k, m, t_0, p_0,
-              eta, PI=None, TAU=None):
+              eta,
+              t0=None, p0=None,
+              PI=None, TAU=None):
     """
     Diffusion.
 
@@ -87,8 +89,8 @@ def diffusion(mf, cp, k, m, t_0, p_0,
         pi  = (1+eta*(k-1)/2*m**2)**(k/(k-1))       # Pressure -> Total pressure
         PI  = pi/a.pi
 
-    t00 = a.t0
-    p00 = a.p0
+    t00 = a.t0 if isinstance(t0, type(None)) else t0
+    p00 = a.p0 if isinstance(p0, type(None)) else p0
 
     t01 = t00*TAU
     p01 = p00*PI

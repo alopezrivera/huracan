@@ -175,6 +175,8 @@ class gas(fluid):
                       eta = eta,
                       PI  = PI,
                       TAU = TAU,
+                      t0  = self.t0 if hasattr(self, 't0') else None,
+                      p0  = self.p0 if hasattr(self, 'p0') else None
                       )
 
         self.t0 = p.t01
