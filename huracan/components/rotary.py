@@ -94,7 +94,10 @@ class fan(screw):
     Fan
     ---
 
-    Fundamental difference with a propeller: disk loading.
+    Fundamental differences with a propeller:
+    - Disk loading.
+    - Fan shroud.
+    - Bypass flow.
     """
     pass
 
@@ -103,8 +106,6 @@ class prop(screw):
     """
     Propeller
     ---------
-
-    Fundamental difference with a propeller: disk loading.
     """
     pass
 
@@ -114,6 +115,7 @@ class propfan(screw):
     Propfan
     -------
 
-    Fundamental difference with a propeller: disk loading.
+    Fundamental difference with a propeller:
+    - Disk loading.
     """
     pass
