@@ -8,8 +8,21 @@ class intake(component):
 
     Airflow fed directly to engine.
     """
+    def __init__(self,
+                 eta=1,
+                 PI=1,
+                 TAU=1):
+        """
+        :type eta: float
+        :type PI:  float
+        :type TAU: float
+        """
+        self.eta = eta
+        self.PI  = PI
+        self.TAU = TAU
+
     def tf(self, gas):
-        return gas.absolute()
+        return gas.diffusion(eta=self.eta, PI=self.PI, TAU=self.TAU)
 
 
 class inlet(component):
