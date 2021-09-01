@@ -3,7 +3,8 @@ from huracan.engine import component
 
 class power_plant(component):
     """
-    Aircraft electrical power plant.
+    Aircraft electrical power plant
+    -------------------------------
     """
     def __init__(self,
                  w,

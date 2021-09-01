@@ -14,6 +14,7 @@ from huracan.constants import R
 class component:
     """
     Component
+    ---------
     """
     def __sub__(self, other):
         """
@@ -37,6 +38,7 @@ class component:
 class shaft:
     """
     Shaft
+    -----
     """
     def __init__(self, *args, eta):
         """
@@ -90,6 +92,7 @@ class shaft:
 class stream:
     """
     Stream
+    ------
     """
     def __init__(self, gas=None):
         """
@@ -173,9 +176,11 @@ class stream:
         if there are more than 1 components of the same class
         in the stream.
         """
-        codes = {'intake':             'it',
+        codes = {'fan':                'fn',
+                 'prop':               'pr',
+                 'propfan':            'pf',
+                 'intake':             'it',
                  'inlet':              'il',
-                 'fan':                'fn',
                  'compressor':         'cp',
                  'combustion_chamber': 'cc',
                  'turbine':            'tb',
@@ -438,6 +443,10 @@ class stream:
 
 
 class system:
+    """
+    System
+    ------
+    """
     def __init__(self, obj1, obj2):                 # TODO: test system creation
         """
         Create a system from two objects.

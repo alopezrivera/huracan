@@ -7,7 +7,8 @@ from huracan.thermo.processes import absolute, diffusion, compression, combustio
 
 class fluid:
     """
-    Fluid class
+    Fluid
+    -----
     """
     @classmethod
     def _diversion(cls, fluid, fraction):
@@ -45,7 +46,13 @@ class fluid:
 
 class gas(fluid):
     """
-    Ideal gas class
+    Ideal gas model
+    ---------------
+
+    All gas phenomena are modelled using its
+    - Mass flow
+    - Constant pressure specific heat capacity
+    - Ratio of specific heat capacities
     """
     def __init__(self, mf, cp, k,
                  m, t_0, p_0):
@@ -303,7 +310,8 @@ class gas(fluid):
 
 class fuel:
     """
-    Fuel class
+    Fuel model
+    ----------
     """
     def __init__(self, LHV,
                  mf=None):
@@ -317,7 +325,8 @@ class fuel:
 
 class mixture(gas):
     """
-    Mixture class
+    Mixture model
+    -------------
     """
 
     @classmethod
@@ -372,45 +381,3 @@ class mixture(gas):
                          m   = 0,
                          t_0 = self._mix_t0(gas1, gas2),
                          p_0 = self._mix_p0(gas1, gas2))
-
-
-if __name__ == '__main__':
-
-    mf = 700
-    m  = 0.6
-    t  = 288
-    p  = 101325
-    fr = 0
-
-    g = gas(mf = mf,
-            cp = lambda T: 1150 if T > 600 else 1000,
-            k  = lambda T: 1.33 if T > 600 else 1.4,
-            m  = m, t_0=t, p_0=p)
-
-    f = gas(mf = mf,
-            cp = lambda T: 1150 if T > 600 else 1000,
-            k  = lambda T: 1.33 if T > 600 else 1.4,
-            m  = m, t_0=t*fr, p_0=p*fr)
-
-    k = gas(mf = mf,
-            cp = lambda T: 1500 if T > 1000 else 1200 if T > 800 else 400,
-            k  = lambda T: 1.33 if T > 600 else 1.4,
-            m  = m, t_0=t*fr, p_0=p*fr)
-
-    def t_mixture():
-        global h
-        h = g+f
-
-        assert abs(h.t0 - g.t0/2) < 10e-12
-        assert abs(h.p0 - g.p0/2) < 10e-12
-
-    def t_diversion():
-        mf = h.mf
-        fr = 0.2
-        i, j = fr*h
-
-        assert i.mf == mf*(1-fr)
-        assert j.mf == mf*fr
-
-    t_mixture()
-    t_diversion()

@@ -184,8 +184,8 @@ class combustion_chamber(combustor):
 
 class afterburner(combustor):
     """
-    Afterburner/Reheater
-    --------------------
+    Afterburner or Reheater
+    -----------------------
 
     Constant pressure heat addition.
     """
