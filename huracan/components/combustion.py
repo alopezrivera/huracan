@@ -55,10 +55,12 @@ class combustor(component):
         at which the combustion process takes place.
         """
 
-        assert hasattr(self, 'fuel_mf') or not isinstance(self.fuel.mf, type(None)), \
+        assert hasattr(self, 'fuel_mf'), \
             'Component incorporating combustor has no fuel mass flow method implemented.'
 
         self.fuel_mf(gas)
+
+        self.Q = self.fuel.mf*self.eta*self.fuel.LHV      # Heat added to the flow
 
         approx_process_t = deepcopy(gas).heat_addition(eta=self.eta,
                                                        cp=gas.cp(gas.t0),
