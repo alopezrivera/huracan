@@ -14,6 +14,7 @@ class combustor(component):
     def __init__(self,
                  fuel,
                  eta,
+                 PI=1,
                  t01=None,
                  ):
         """
@@ -43,6 +44,7 @@ class combustor(component):
 
         self.fuel = fuel
         self.eta  = eta
+        self.PI   = PI
         self.t01  = t01
 
     def tf(self, gas):
@@ -68,6 +70,7 @@ class combustor(component):
                                                        fuel_LHV=self.fuel.LHV).t01
 
         return gas.heat_addition(eta=self.eta,
+                                 PI=self.PI,
                                  cp=gas.cp(approx_process_t),
                                  fuel_mf=self.fuel.mf,
                                  fuel_LHV=self.fuel.LHV)
@@ -90,6 +93,7 @@ class combustion_chamber(combustor):
     def __init__(self,
                  fuel,
                  eta,
+                 PI=1,
                  t01=None,
                  ):
         """
@@ -124,6 +128,7 @@ class combustion_chamber(combustor):
         """
         super().__init__(fuel=fuel,
                          eta=eta,
+                         PI=PI,
                          t01=t01)
 
     def fuel_mf(self, gas):
@@ -194,6 +199,7 @@ class afterburner(combustor):
     def __init__(self,
                  fuel,
                  eta,
+                 PI=1,
                  t01=None):
         """
         The total pressure and temperature
@@ -221,6 +227,7 @@ class afterburner(combustor):
         """
         super().__init__(fuel=fuel,
                          eta=eta,
+                         PI=PI,
                          t01=t01)
 
     def fuel_mf(self, gas):
