@@ -18,7 +18,6 @@ class compressor(component):
         :type TAU: float
         """
         self.eta = eta
-
         self.PI  = PI
         self.TAU = TAU
 
@@ -85,9 +84,6 @@ class screw(component):
         self.PI  = PI
         self.TAU = TAU
 
-    def tf(self, gas):
-        return gas.compression(eta=self.eta, PI=self.PI, TAU=self.TAU)
-
 
 class fan(screw):
     """
@@ -99,7 +95,24 @@ class fan(screw):
     - Fan shroud.
     - Bypass flow.
     """
-    pass
+
+    def __init__(self,
+                 eta,
+                 bpr,
+                 PI=None,
+                 TAU=None):
+        """
+        :type eta: float
+        :type bpr: float
+        :type PI:  float
+        :type TAU: float
+        """
+        super().__init__(eta=eta,
+                         PI= PI,
+                         TAU=TAU)
+
+    def tf(self, gas):
+        return gas.compression(eta=self.eta, PI=self.PI, TAU=self.TAU)
 
 
 class prop(screw):
@@ -107,10 +120,35 @@ class prop(screw):
     Propeller
     ---------
     """
-    pass
+    def __init__(self,
+                 eta,
+                 w,
+                 PI=None,
+                 TAU=None):
+        """
+        :param w:  [W] Propeller break power
+
+        :type eta: float
+        :type w:   float
+        :type PI:  float
+        :type TAU: float
+        """
+        super().__init__(eta=1,
+                         PI=PI,
+                         TAU=TAU)
+        self.w        = w
+        self.eta_prop = eta
+
+    def thrust(self, v0):
+        return self.w*self.eta_prop/v0
+
+    def tf(self, gas):
+        p = gas.compression(eta=self.eta, PI=self.PI, TAU=self.TAU)   # Placeholder
+        p.w = self.w
+        return p
 
 
-class propfan(screw):
+class propfan(prop):
     """
     Propfan
     -------
@@ -118,4 +156,3 @@ class propfan(screw):
     Fundamental difference with a propeller:
     - Disk loading.
     """
-    pass
