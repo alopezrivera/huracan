@@ -58,5 +58,4 @@ for i in range(verification_t0.index(1450)):
     assert model_t0[i] - verification_t0[i] < 10e-8, (i, model_t0[i], verification_t0[i])
     assert model_p0[i] - verification_p0[i] < 10e-8, (i, model_p0[i], verification_p0[i])
 
-stream.plot_T_p(show=True, color='blue')
-stream.plot_p_v(show=True, color='orange')
+assert stream.v_exit() - 840.3353 < 10e-5, stream.v_exit() - 840.3353
