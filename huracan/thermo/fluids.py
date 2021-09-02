@@ -26,12 +26,12 @@ class fluid:
         :return:   [fluid] Main flow
                    [fluid] Diverted flow
         """
-        div_f = deepcopy(f)
+        mf, df = deepcopy(f), deepcopy(f)
 
-        div_f.mf *= fr
-        f.mf     *= 1 - fr
+        df.mf *= fr
+        mf.mf *= 1 - fr
 
-        return f, div_f
+        return mf, df
 
     def __mul__(self, other):
         """
@@ -280,10 +280,12 @@ class gas(fluid):
 
         return p
 
-    def heat_addition(self, eta,
+    def heat_addition(self,
+                      eta,
                       cp,
                       fuel_mf,
-                      fuel_LHV):
+                      fuel_LHV,
+                      PI=1):
         """
         Constant pressure heat addition
         -------------------------------
@@ -304,7 +306,8 @@ class gas(fluid):
                        p00      = self.p0,
                        fuel_mf  = fuel_mf,
                        fuel_LHV = fuel_LHV,
-                       eta      = eta)
+                       eta      = eta,
+                       PI       = PI)
 
         self.t0 = p.t01
         self.p0 = p.p01
@@ -338,7 +341,6 @@ class mixture(gas):
         """
         Total temperature of fluid mixture.
         """
-        print(gas1.t0, gas2.t0)
         n = gas1.mf*gas1.cp(gas1.t0)*gas1.t0 + gas2.mf*gas2.cp(gas2.t0)*gas2.t0
         d = gas1.mf*gas1.cp(gas1.t0) + gas2.mf*gas2.cp(gas2.t0)
         t0_f = n / d
