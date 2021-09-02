@@ -218,9 +218,11 @@ def expansion(mf, cp, k, t00, p00,
 def combustion(mf, cp,
                t00, p00,
                fuel_mf, fuel_LHV,
-               eta):
+               eta,
+               PI=1):
     """
     Constant pressure heat addition.
+    - A pressure ratio PI may be specified if required.
 
     :param mf:       [kg/s] Gas mass flow
     :param cp:       [-]    Constant pressure specific heat
@@ -243,7 +245,7 @@ def combustion(mf, cp,
     dt = eta*(fuel_mf*fuel_LHV)/(mf*cp)
 
     t01 = t00 + dt
-    p01 = p00
+    p01 = p00*PI
 
     setattr_namespace(p, locals())
 
