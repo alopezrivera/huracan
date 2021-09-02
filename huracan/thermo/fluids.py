@@ -11,25 +11,27 @@ class fluid:
     -----
     """
     @classmethod
-    def _diversion(cls, fluid, fraction):
+    def _diversion(cls, f, fr):
         """
         Fluid diversion.
+        - Diverted flow mass flow:       fraction*mf
+        - Main flow mass flow:       (1-fraction)*mf
 
-        :param fluid:    Fluid to be diverted.
-        :param fraction: Fraction of diverted fluid.
+        :param f:  Fluid to be diverted.
+        :param fr: Fraction of diverted fluid.
 
-        :type fluid:     mixture or fluid
-        :type fraction:  float < 1
+        :type f:   mixture or fluid
+        :type fr:  0 <= float <= 1
 
-        :return:         [fluid] Core flow
-                         [fluid] Diverted flow
+        :return:   [fluid] Main flow
+                   [fluid] Diverted flow
         """
-        div_f = deepcopy(fluid)
+        div_f = deepcopy(f)
 
-        div_f.mf *= fraction
-        fluid.mf *= 1 - fraction
+        div_f.mf *= fr
+        f.mf     *= 1 - fr
 
-        return fluid, div_f
+        return f, div_f
 
     def __mul__(self, other):
         """
@@ -336,6 +338,7 @@ class mixture(gas):
         """
         Total temperature of fluid mixture.
         """
+        print(gas1.t0, gas2.t0)
         n = gas1.mf*gas1.cp(gas1.t0)*gas1.t0 + gas2.mf*gas2.cp(gas2.t0)*gas2.t0
         d = gas1.mf*gas1.cp(gas1.t0) + gas2.mf*gas2.cp(gas2.t0)
         t0_f = n / d
