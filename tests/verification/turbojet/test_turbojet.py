@@ -4,9 +4,9 @@ from huracan.components import inlet, compressor, combustion_chamber, turbine, a
 
 
 mf = 160
-M = 0
-t = 288
-p = 101325
+M  = 0
+t  = 288
+p  = 101325
 
 fuel_cc = fuel(LHV=43e6)
 fuel_ab = fuel(LHV=43e6)
@@ -24,7 +24,6 @@ t1 = turbine(0.9)
 t2 = turbine(0.9)
 ab = afterburner(fuel_ab, eta=0.95, t01=1850)
 n  = nozzle(0.95)
-
 
 shaft1 = shaft(c1, t2, eta=0.99)
 shaft2 = shaft(c2, t1, eta=0.99)
