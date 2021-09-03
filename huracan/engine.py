@@ -312,30 +312,8 @@ class stream:
             print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
 
     """
-    System takeover and API functions
+    Stream-specific functions
     """
-    def _system_takeover(self, method, **kwargs):
-        if hasattr(self, 'system'):
-            getattr(self.system, method)(**kwargs)
-        else:
-            getattr(self, '_' + method)(**kwargs)
-
-    def run(self, log=True):
-        args = locals()
-        del args['self']
-
-        self._system_takeover('run', **args)
-
-    def fmf(self):
-        """
-        Stream fuel mass flow
-        """
-        fmf = 0
-        for c in self.components:
-            if hasattr(c, 'fuel') and hasattr(c.fuel, 'mf'):
-                fmf += c.fuel.mf
-        return fmf
-
     def v_exit(self):
         """
         Flow exit velocity
@@ -369,29 +347,63 @@ class stream:
         """
         return self.gas.mf*R*self.gas.t0/(self.gas.p0*self.v_exit())
 
+    def t0(self):
+        """
+        Total temperature vector.
+        """
+        return np.array([c.t0 for c in self.components])
+
+    def p0(self):
+        """
+        Total pressure vector.
+        """
+        return np.array([c.p0 for c in self.components])
+
+    def V(self):
+        """
+        Specific total volume vector.
+        """
+        return np.array([c.t0*R/c.p0 for c in self.components])
+
+    def S(self):                 # TODO: implement
+        """
+        Specific entropy vector.
+        """
+        S = lambda t0, p0: 1
+        return np.array([S(t0=c.t0, p0=c.p0) for c in self.components])
+
+    """
+    System takeover and API functions
+    """
+    def _system_takeover(self, method, **kwargs):
+        if hasattr(self, 'system'):
+            getattr(self.system, method)(**kwargs)
+        else:
+            getattr(self, '_' + method)(**kwargs)
+
+    def run(self, log=True):
+        args = locals()
+        del args['self']
+
+        self._system_takeover('run', **args)
+
+    def fmf(self):
+        """
+        Stream fuel mass flow
+        """
+        self._system_takeover('fmf')
+
     def thrust(self):
         """
         Flow thrust
-
-        If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
         """
-
-        if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
-            propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
-            prop_thrust = sum([prop.thrust(self.gas.v_0) for prop in propellers])
-        else:
-            prop_thrust = 0
-
-        if self.choked:
-            return prop_thrust + self.gas.mf*(self.v_exit()-self.gas.v_0) + self.A_exit()*(self.gas.p0-self.gas.p_0)
-        else:
-            return prop_thrust + self.gas.mf*(self.v_exit()-self.gas.v_0)
+        self._system_takeover('thrust')
 
     def sfc(self):
         """
         Specific fuel consumption
         """
-        return self.fmf()/self.thrust()
+        self._system_takeover('sfc')
 
     # def Q_in(self):               #TODO: verify and implement efficiency calculations
     #     """
@@ -430,31 +442,6 @@ class stream:
     #     Stream propulsive efficiency.
     #     """
     #     return self.E_prop()/self.Q_in()
-
-    def t0(self):
-        """
-        Total temperature vector.
-        """
-        return np.array([c.t0 for c in self.components])
-
-    def p0(self):
-        """
-        Total pressure vector.
-        """
-        return np.array([c.p0 for c in self.components])
-
-    def V(self):
-        """
-        Specific total volume vector.
-        """
-        return np.array([c.t0*R/c.p0 for c in self.components])
-
-    def S(self):                 # TODO: implement
-        """
-        Specific entropy vector.
-        """
-        S = lambda t0, p0: 1
-        return np.array([S(t0=c.t0, p0=c.p0) for c in self.components])
 
     def plot_T_p(self,
                  show=False,
@@ -541,10 +528,39 @@ class stream:
             self._log()
 
     def _fmf(self):
-        pass
+        """
+        Stream fuel mass flow
+        """
+        fmf = 0
+        for c in self.components:
+            if hasattr(c, 'fuel') and hasattr(c.fuel, 'mf'):
+                fmf += c.fuel.mf
+        return fmf
 
     def _thrust(self):
-        pass
+        """
+        Flow thrust
+
+        If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
+        """
+
+        if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
+            propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
+            prop_thrust = sum([prop.thrust(self.gas.v_0) for prop in propellers])
+        else:
+            prop_thrust = 0
+
+        if self.choked:
+            return prop_thrust + self.gas.mf * (self.v_exit() - self.gas.v_0) + self.A_exit() * (
+                        self.gas.p0 - self.gas.p_0)
+        else:
+            return prop_thrust + self.gas.mf * (self.v_exit() - self.gas.v_0)
+
+    def _sfc(self):
+        """
+        Specific fuel consumption
+        """
+        return self.fmf() / self.thrust()
 
     # def Q_in(self):               #TODO: verify and implement efficiency calculations
     #     """
@@ -719,6 +735,9 @@ class system:
         self.streams = []
         self._gobble(args)
 
+    """
+    Operators
+    """
     def __call__(self, *args):
         """
         System stream addition operator: <system>(<list of streams>)
@@ -744,6 +763,9 @@ class system:
         streams = list(set(self.streams) & set(other.streams))
         return system(*streams)
 
+    """
+    System functions
+    """
     def run(self, log=True):
         """
         Run stream system.
@@ -755,6 +777,15 @@ class system:
                 if s.stream_id[0] == n:
                     s._run(log)
             n += 1
+
+    def fmf(self):
+        pass
+
+    def thrust(self):
+        pass
+
+    def sfc(self):
+        pass
 
     def plot_T_p(self):                             # TODO: implement diagram integrating all streams
 
