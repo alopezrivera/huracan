@@ -57,10 +57,10 @@ class combustor(component):
         at which the combustion process takes place.
         """
 
-        assert hasattr(self, 'fuel_mf'), \
+        assert hasattr(self, 'fmf'), \
             'Component incorporating combustor has no fuel mass flow method implemented.'
 
-        self.fuel_mf(gas)
+        self.fmf(gas)
 
         self.Q = self.fuel.mf*self.eta*self.fuel.LHV      # Heat added to the flow
 
@@ -131,7 +131,7 @@ class combustion_chamber(combustor):
                          PI=PI,
                          t01=t01)
 
-    def fuel_mf(self, gas):
+    def fmf(self, gas):
         """
         At the time of execution, the fuel mass flow is
         determined based on:
@@ -230,7 +230,7 @@ class afterburner(combustor):
                          PI=PI,
                          t01=t01)
 
-    def fuel_mf(self, gas):
+    def fmf(self, gas):
         """
         At the time of execution, the fuel mass flow is
         determined based on:
