@@ -28,8 +28,8 @@ class fluid:
         """
         mf, df = deepcopy(f), deepcopy(f)
 
-        df.mf *= fr
         mf.mf *= 1 - fr
+        df.mf *= fr
 
         return mf, df
 
