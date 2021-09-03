@@ -34,7 +34,7 @@ s2, s3 = stream*(bpr/(bpr+1))
 
 s2-c1-c2-cc-t1-t2
 
-s4 = s3-s2
+s4 = s2-s3
 
 s4-n
 
