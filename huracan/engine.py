@@ -1,5 +1,5 @@
-import inspect
 import numpy as np
+from copy import deepcopy
 
 from mpl_plotter import figure
 from mpl_plotter.two_d import line, scatter, comparison
@@ -99,9 +99,29 @@ class stream:
     Stream
     ------
     """
-    def __init__(self, gas=None):
+    def __init__(self, gas=None, fr=None, influx=None):
         """
-        :type gas: gas
+        :param fr:     Fraction of the gas instance passed
+                       to the stream which physically enters
+                       the stream.
+                       This is useful so the original gas
+                       instance can be passed to child streams
+                       in a stream diversion process.
+                       In this way, the gas attribute of the
+                       child streams points to the original
+                       stream's gas instance until the moment
+                       the child streams are run: at this
+                       time, a deep copy of the original gas
+                       instance is created, and the mass flow
+                       multiplied by _fr_ to reflect the mass
+                       flow actually flowing in the child stream.
+        :param influx: Gas instance from a stream merge operation.
+                       If present, both gases will be combined at
+                       stream runtime.
+
+        :type gas:     gas
+        :type fr:      float
+        :type influx:  list of stream
         """
         self.stream_id  = [0]
         self.components = []
@@ -110,7 +130,11 @@ class stream:
         self.ran = False
 
         if not isinstance(gas, type(None)):
-            self.gas = gas
+            self.gas    = gas
+        if not isinstance(fr, type(None)):
+            self.fr     = fr
+        if not isinstance(influx, type(None)):
+            self.influx = influx
 
     def __call__(self, gas):
         self.gas = gas
@@ -144,7 +168,7 @@ class stream:
         n = max(self.stream_id[0], s.stream_id[0])  # Get largest stream_id
         self.stream_id[0] = s.stream_id[0] = n      # Set largest stream_id for both merging streams
 
-        merged = stream(self.gas + s.gas)
+        merged = stream(influx=[self, s])
         merged.stream_id[0] = n + 1
 
         if hasattr(self, 'system') and hasattr(s, 'system'):
@@ -173,10 +197,8 @@ class stream:
         assert hasattr(self, 'gas'), 'The stream must have a gas attribute for' \
                                      'the stream diversion operation to be possible.'
 
-        g_main, g_div = self.gas*fr
-
-        main = stream(g_main)
-        div  = stream(g_div)
+        main = stream(self.gas, fr=fr)
+        div  = stream(self.gas, fr=1-fr)
 
         # Stream ID
         main.stream_id[0] = self.stream_id[0] + 1
@@ -220,6 +242,17 @@ class stream:
         Execute the transfer functions of all components in the stream
         on the instance's gas class instance.
         """
+
+        if hasattr(self, 'fr'):                         # FIXME: kinda scary
+            self.gas, _ = self.fr*deepcopy(self.gas)
+        if hasattr(self, 'influx'):
+            if hasattr(self, 'gas'):
+                for s in self.influx:
+                    self.gas += s.gas
+            else:
+                self.gas = self.influx[0].gas
+                for s in self.influx[1:]:
+                    self.gas += s.gas
 
         assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
 
@@ -621,7 +654,7 @@ class system:
     System
     ------
     """
-    def __init__(self, *args):                 # TODO: test system creation
+    def __init__(self, *args):
         """
         Create a system from two objects.
 
@@ -654,17 +687,6 @@ class system:
         """
         streams = list(set(self.streams) & set(other.streams))
         return system(*streams)
-
-    def __sub__(self, other):
-        if isinstance(other, component):            # TODO: implement system component addition
-            return self.stream-other
-        elif isinstance(other, stream):             # TODO: implement system-stream merge
-            return self
-        elif isinstance(other, system):             # TODO: implement system-system merge
-            pass
-
-    def __mul__(self, other):                       # TODO: implement system diversion
-        pass
 
     def run(self, log=True):
         """
