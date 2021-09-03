@@ -136,6 +136,9 @@ class stream:
         if not isinstance(influx, type(None)):
             self.influx = influx
 
+    """
+    Operators
+    """
     def __call__(self, gas):
         self.gas = gas
         return self
@@ -225,65 +228,15 @@ class stream:
 
         return main, div
 
-    def _system_takeover(self, method, **kwargs):
-        if hasattr(self, 'system'):
-            getattr(self.system, method)(**kwargs)
-        else:
-            getattr(self, '_' + method)(**kwargs)
-
-    def run(self, log=True):
-        args = locals()
-        del args['self']
-
-        self._system_takeover('run', **args)
-
-    def _run(self, log=True):
+    """
+    Utilities
+    """
+    def stages(self):
         """
-        Execute the transfer functions of all components in the stream
-        on the instance's gas class instance.
+        Return a list containing the stage name of each
+        component in the stream.
         """
-
-        if hasattr(self, 'fr'):                         # FIXME: kinda scary
-            self.gas, _ = self.fr*deepcopy(self.gas)
-        if hasattr(self, 'influx'):
-            if hasattr(self, 'gas'):
-                for s in self.influx:
-                    self.gas += s.gas
-            else:
-                self.gas = self.influx[0].gas
-                for s in self.influx[1:]:
-                    self.gas += s.gas
-
-        assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
-
-        self.choked = False                                 # FIXME: choked flow implementation is ugly
-
-        for c in self.components:
-            c(self.gas)
-            c.stage = self._stage_name(c)
-
-            if hasattr(c, 'choked') and c.choked:           # FIXME: ugly
-                self.choked = c.choked
-
-        # Indicate stream has been run.
-        self.ran = True
-
-        if log:
-            self._log()
-
-    def _log(self):
-
-        d = 9
-
-        for c in self.components:
-            section_name = join_set_distance(c.stage, c.__class__.__name__.capitalize().replace("_", " "), d)
-            print_color(section_name, 'green')
-
-            if c.__class__.__name__ == 'nozzle':
-                if c.choked:
-                    print_color(' '*d + 'Choked flow', 'red')
-            print_result(' '*(d+1) + 'T0', c.t0, '[K]')
-            print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
+        return [c.stage for c in self.components]
 
     def _stage_name(self, c):
         """
@@ -344,12 +297,34 @@ class stream:
 
         return '' if n == 0 else str(n)
 
-    def stages(self):
-        """
-        Return a list containing the stage name of each
-        component in the stream.
-        """
-        return [c.stage for c in self.components]
+    def _log(self):
+
+        d = 9
+
+        for c in self.components:
+            section_name = join_set_distance(c.stage, c.__class__.__name__.capitalize().replace("_", " "), d)
+            print_color(section_name, 'green')
+
+            if c.__class__.__name__ == 'nozzle':
+                if c.choked:
+                    print_color(' '*d + 'Choked flow', 'red')
+            print_result(' '*(d+1) + 'T0', c.t0, '[K]')
+            print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
+
+    """
+    System takeover and API functions
+    """
+    def _system_takeover(self, method, **kwargs):
+        if hasattr(self, 'system'):
+            getattr(self.system, method)(**kwargs)
+        else:
+            getattr(self, '_' + method)(**kwargs)
+
+    def run(self, log=True):
+        args = locals()
+        del args['self']
+
+        self._system_takeover('run', **args)
 
     def fmf(self):
         """
@@ -527,6 +502,87 @@ class stream:
         args.pop('kwargs', None)
 
         self._system_takeover('plot_cycle_graph', **args)
+
+    """
+    Stream functions source
+    """
+    def _run(self, log=True):
+        """
+        Execute the transfer functions of all components in the stream
+        on the instance's gas class instance.
+        """
+
+        if hasattr(self, 'fr'):                         # FIXME: kinda scary
+            self.gas, _ = self.fr*deepcopy(self.gas)
+        if hasattr(self, 'influx'):
+            if hasattr(self, 'gas'):
+                for s in self.influx:
+                    self.gas += s.gas
+            else:
+                self.gas = self.influx[0].gas
+                for s in self.influx[1:]:
+                    self.gas += s.gas
+
+        assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
+
+        self.choked = False                                 # FIXME: choked flow implementation is ugly
+
+        for c in self.components:
+            c(self.gas)
+            c.stage = self._stage_name(c)
+
+            if hasattr(c, 'choked') and c.choked:           # FIXME: ugly
+                self.choked = c.choked
+
+        # Indicate stream has been run.
+        self.ran = True
+
+        if log:
+            self._log()
+
+    def _fmf(self):
+        pass
+
+    def _thrust(self):
+        pass
+
+    # def Q_in(self):               #TODO: verify and implement efficiency calculations
+    #     """
+    #     Heat provided to the flow.
+    #     """
+    #     q_provided = 0
+    #     for c in self.components:
+    #         if c.__class__.__name__ == 'combustion_chamber':
+    #             q_provided += c.Q
+    #     return q_provided
+    #
+    # def W_req(self):
+    #     """
+    #     Work required from the flow.
+    #     """
+    #     w_required = 0
+    #     for c in self.components:
+    #         if c.__class__.__name__ == 'turbine':
+    #             w_required -= c.w_r()
+    #     return w_required
+    #
+    # def E_balance(self):
+    #     """
+    #     Flow energy balance.
+    #     """
+    #     return self.Q_in() - self.W_req()
+    #
+    # def E_prop(self):
+    #     """
+    #     Energy added to the flow for propulsion.
+    #     """
+    #     return self.v_exit()**2/2
+    #
+    # def prop_efficiency(self):
+    #     """
+    #     Stream propulsive efficiency.
+    #     """
+    #     return self.E_prop()/self.Q_in()
 
     def _plot_T_p(self,
                   show=False,
