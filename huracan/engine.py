@@ -99,29 +99,32 @@ class stream:
     Stream
     ------
     """
-    def __init__(self, gas=None, fr=None, influx=None):
+    def __init__(self,
+                 gas=None,
+                 parents=None,
+                 fr=None):
         """
-        :param fr:     Fraction of the gas instance passed
-                       to the stream which physically enters
-                       the stream.
-                       This is useful so the original gas
-                       instance can be passed to child streams
-                       in a stream diversion process.
-                       In this way, the gas attribute of the
-                       child streams points to the original
-                       stream's gas instance until the moment
-                       the child streams are run: at this
-                       time, a deep copy of the original gas
-                       instance is created, and the mass flow
-                       multiplied by _fr_ to reflect the mass
-                       flow actually flowing in the child stream.
-        :param influx: Gas instance from a stream merge operation.
-                       If present, both gases will be combined at
-                       stream runtime.
+        :param fr:      Fraction of the gas instance passed
+                        to the stream which physically enters
+                        the stream.
+                        This is useful so the original gas
+                        instance can be passed to child streams
+                        in a stream diversion process.
+                        In this way, the gas attribute of the
+                        child streams points to the original
+                        stream's gas instance until the moment
+                        the child streams are run: at this
+                        time, a deep copy of the original gas
+                        instance is created, and the mass flow
+                        multiplied by _fr_ to reflect the mass
+                        flow actually flowing in the child stream.
+        :param parents: Parent streams.
+                        - If parents includes 2 or more streams,
+                          they will be merged at runtime.
 
         :type gas:     gas
         :type fr:      float
-        :type influx:  list of stream
+        :type parents: list of stream
         """
         self.stream_id  = [0]
         self.components = []
@@ -131,10 +134,13 @@ class stream:
 
         if not isinstance(gas, type(None)):
             self.gas    = gas
+        if not isinstance(parents, type(None)):
+            self.parents = parents
+
+        # Runtime dictionary
+        self.runtime = {}
         if not isinstance(fr, type(None)):
-            self.fr     = fr
-        if not isinstance(influx, type(None)):
-            self.influx = influx
+            self.runtime['fr'] = fr
 
     """
     Operators
@@ -171,7 +177,7 @@ class stream:
         n = max(self.stream_id[0], s.stream_id[0])  # Get largest stream_id
         self.stream_id[0] = s.stream_id[0] = n      # Set largest stream_id for both merging streams
 
-        merged = stream(influx=[self, s])
+        merged = stream(parents=[self, s])
         merged.stream_id[0] = n + 1
 
         if hasattr(self, 'system') and hasattr(s, 'system'):
@@ -312,7 +318,7 @@ class stream:
             print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
 
     """
-    Stream-specific functions
+    Stream state
     """
     def v_exit(self):
         """
@@ -373,125 +379,7 @@ class stream:
         return np.array([S(t0=c.t0, p0=c.p0) for c in self.components])
 
     """
-    System takeover and API functions
-    """
-    def _system_takeover(self, method, **kwargs):
-        if hasattr(self, 'system'):
-            getattr(self.system, method)(**kwargs)
-        else:
-            getattr(self, '_' + method)(**kwargs)
-
-    def run(self, log=True):
-        args = locals()
-        del args['self']
-
-        self._system_takeover('run', **args)
-
-    def fmf(self):
-        """
-        Stream fuel mass flow
-        """
-        self._system_takeover('fmf')
-
-    def thrust(self):
-        """
-        Flow thrust
-        """
-        self._system_takeover('thrust')
-
-    def sfc(self):
-        """
-        Specific fuel consumption
-        """
-        self._system_takeover('sfc')
-
-    # def Q_in(self):               #TODO: verify and implement efficiency calculations
-    #     """
-    #     Heat provided to the flow.
-    #     """
-    #     q_provided = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'combustion_chamber':
-    #             q_provided += c.Q
-    #     return q_provided
-    #
-    # def W_req(self):
-    #     """
-    #     Work required from the flow.
-    #     """
-    #     w_required = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'turbine':
-    #             w_required -= c.w_r()
-    #     return w_required
-    #
-    # def E_balance(self):
-    #     """
-    #     Flow energy balance.
-    #     """
-    #     return self.Q_in() - self.W_req()
-    #
-    # def E_prop(self):
-    #     """
-    #     Energy added to the flow for propulsion.
-    #     """
-    #     return self.v_exit()**2/2
-    #
-    # def prop_efficiency(self):
-    #     """
-    #     Stream propulsive efficiency.
-    #     """
-    #     return self.E_prop()/self.Q_in()
-
-    def plot_T_p(self,
-                 show=False,
-                 label=None,
-                 color=colorscheme_one()[0],
-                 **kwargs):
-        args = locals()
-        args.pop('self', None)
-        args.pop('kwargs', None)
-
-        self._system_takeover('plot_T_p', **{**args, **kwargs})
-
-    def plot_p_v(self,
-                 show=False,
-                 label=None,
-                 color=colorscheme_one()[0],
-                 **kwargs):
-        args = locals()
-        args.pop('self', None)
-        args.pop('kwargs', None)
-
-        self._system_takeover('plot_p_v', **{**args, **kwargs})
-
-    def plot_T_S(self,
-                 show=False,
-                 label=None,
-                 color=colorscheme_one()[0],
-                 **kwargs):
-        args = locals()
-        args.pop('self', None)
-        args.pop('kwargs', None)
-
-        self._system_takeover('plot_T_S', **{**args, **kwargs})
-
-    def plot_cycle_graph(self,
-                         x, y,
-                         label,
-                         x_label, y_label,
-                         color=colorscheme_one()[0],
-                         show=False,
-                         **kwargs
-                         ):
-        args = locals()
-        args.pop('self', None)
-        args.pop('kwargs', None)
-
-        self._system_takeover('plot_cycle_graph', **args)
-
-    """
-    Stream functions source
+    Stream runtime functions
     """
     def _run(self, log=True):
         """
@@ -499,16 +387,7 @@ class stream:
         on the instance's gas class instance.
         """
 
-        if hasattr(self, 'fr'):                         # FIXME: kinda scary
-            self.gas, _ = self.fr*deepcopy(self.gas)
-        if hasattr(self, 'influx'):
-            if hasattr(self, 'gas'):
-                for s in self.influx:
-                    self.gas += s.gas
-            else:
-                self.gas = self.influx[0].gas
-                for s in self.influx[1:]:
-                    self.gas += s.gas
+        self._runtime()
 
         assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
 
@@ -527,6 +406,29 @@ class stream:
         if log:
             self._log()
 
+    def _runtime(self):
+        if hasattr(self, 'parents') and len(self.parents) > 1:
+            self._merge()
+
+        for k, v in self.runtime.items():
+            f = getattr(self, '_'+k)
+            f(v)
+
+    def _merge(self):
+        if hasattr(self, 'gas'):
+            for s in self.parents:
+                self.gas += s.gas
+        else:
+            self.gas = self.parents[0].gas
+            for s in self.parents[1:]:
+                self.gas += s.gas
+
+    def _fr(self, fr):
+        self.gas, _ = fr * deepcopy(self.gas)
+
+    """
+    Stream performance analysis
+    """
     def _fmf(self):
         """
         Stream fuel mass flow
@@ -624,7 +526,7 @@ class stream:
                               x_tick_ndecimals=2,
                               **further_custom)
 
-    def _plot_p_v(self,
+    def _plot_p_V(self,
                   show=False,
                   label=None,
                   color=colorscheme_one()[0],
@@ -720,6 +622,124 @@ class stream:
                 show=show,
                 **further_custom)
 
+    """
+    System takeover and API functions
+    """
+    def _system_takeover(self, method, **kwargs):
+        if hasattr(self, 'system'):
+            getattr(self.system, method)(**kwargs)
+        else:
+            getattr(self, '_' + method)(**kwargs)
+
+    def run(self, log=True):
+        args = locals()
+        del args['self']
+
+        self._system_takeover('run', **args)
+
+    def fmf(self):
+        """
+        Stream fuel mass flow
+        """
+        self._system_takeover('fmf')
+
+    def thrust(self):
+        """
+        Flow thrust
+        """
+        self._system_takeover('thrust')
+
+    def sfc(self):
+        """
+        Specific fuel consumption
+        """
+        self._system_takeover('sfc')
+
+    # def Q_in(self):               #TODO: verify and implement efficiency calculations
+    #     """
+    #     Heat provided to the flow.
+    #     """
+    #     q_provided = 0
+    #     for c in self.components:
+    #         if c.__class__.__name__ == 'combustion_chamber':
+    #             q_provided += c.Q
+    #     return q_provided
+    #
+    # def W_req(self):
+    #     """
+    #     Work required from the flow.
+    #     """
+    #     w_required = 0
+    #     for c in self.components:
+    #         if c.__class__.__name__ == 'turbine':
+    #             w_required -= c.w_r()
+    #     return w_required
+    #
+    # def E_balance(self):
+    #     """
+    #     Flow energy balance.
+    #     """
+    #     return self.Q_in() - self.W_req()
+    #
+    # def E_prop(self):
+    #     """
+    #     Energy added to the flow for propulsion.
+    #     """
+    #     return self.v_exit()**2/2
+    #
+    # def prop_efficiency(self):
+    #     """
+    #     Stream propulsive efficiency.
+    #     """
+    #     return self.E_prop()/self.Q_in()
+
+    def plot_T_p(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._system_takeover('plot_T_p', **{**args, **kwargs})
+
+    def plot_p_V(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._system_takeover('plot_p_V', **{**args, **kwargs})
+
+    def plot_T_S(self,
+                 show=False,
+                 label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._system_takeover('plot_T_S', **{**args, **kwargs})
+
+    def plot_cycle_graph(self,
+                         x, y,
+                         label,
+                         x_label, y_label,
+                         color=colorscheme_one()[0],
+                         show=False,
+                         **kwargs
+                         ):
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._system_takeover('plot_cycle_graph', **args)
+
 
 class system:
     """
@@ -794,20 +814,26 @@ class system:
         y        = []
 
         for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
+                                                               label=None,
+                                                               x_label='', y_label='',
+                                                               color=colorscheme_one()[self.streams.index(stream)]))
             x.append(stream.p0())
             y.append(stream.v0())
 
         comparison(x=x, y=y, f=plotters)
 
-    def plot_p_v(self):                             # TODO: implement diagram integrating all streams
+    def plot_p_V(self):                             # TODO: implement diagram integrating all streams
 
         plotters = []
         x        = []
         y        = []
 
         for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
+                                                               label=None,
+                                                               x_label='', y_label='',
+                                                               color=colorscheme_one()[self.streams.index(stream)]))
             x.append(stream.p0())
             y.append(stream.V())
 
@@ -820,7 +846,10 @@ class system:
         y        = []
 
         for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y, lable=None, x_label='', y_label=''))
+            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
+                                                               label=None,
+                                                               x_label='', y_label='',
+                                                               color=colorscheme_one()[self.streams.index(stream)]))
             x.append(stream.p0())
             y.append(stream.V())
 

@@ -40,5 +40,5 @@ s4-n
 
 stream.run()
 
-# stream.plot_T_p(show=True, color='purple')
-# stream.plot_p_v(show=True, color='orange')
+stream.plot_T_p(show=True, color='purple')
+stream.plot_p_v(show=True, color='orange')
