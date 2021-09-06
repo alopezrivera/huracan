@@ -30,15 +30,15 @@ shaft2 = shaft(c2, t1, eta=0.98)
 
 stream = g-i-fn
 
-s2, s3 = stream*(bpr/(bpr+1))
+s1core, s1bypass = stream*(bpr/(bpr+1))
 
-s2-c1-c2-cc-t1-t2
+s1core-c1-c2-cc-t1-t2
 
-s4 = s2-s3
+s2 = s1core-s1bypass
 
-s4-n
+s2-n
 
 stream.run()
 
-stream.plot_T_p(show=True, color='purple')
-stream.plot_p_v(show=True, color='orange')
+stream.plot_T_p(show=True, color='purple', legend=True)
+stream.plot_p_V(show=True, color='orange', legend=True)
