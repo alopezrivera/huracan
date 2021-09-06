@@ -610,6 +610,7 @@ class stream:
             'x_tick_number': 10,
             'y_tick_number': 10,
             'demo_pad_plot': True,
+            'y_label_pad': 5,
         }
 
         further_custom = {**defaults, **kwargs}
@@ -818,7 +819,7 @@ class system:
 
     def _plot(self,
               x, y,
-              x_scale=1, y_scale=1,
+              x_scale=None, y_scale=None,
               x_label=None, y_label=None,
               show=False,
               plot_label=None,                  # When called from a _system_takeover the plot_label and color
@@ -854,6 +855,14 @@ class system:
         x_system   = []
         y_system   = []
 
+        scales     = {'t0': 1,
+                      'p0': 1/1000,
+                      'V':  1,
+                      'S':  1,
+                      'H':  1}
+        x_scale    = scales[x] if isinstance(x_scale, type(None)) else x_scale
+        y_scale    = scales[y] if isinstance(y_scale, type(None)) else y_scale
+
         # 1. Create figure
         figure((9, 5))
 
@@ -876,8 +885,8 @@ class system:
                 """
                 return lambda x, y, **kwargs: stream.plot_cycle_graph(x=x, y=y, **{**kwargs, **defaults})
 
-            x_stream = getattr(stream, x)()/x_scale
-            y_stream = getattr(stream, y)()/y_scale
+            x_stream = getattr(stream, x)()*x_scale
+            y_stream = getattr(stream, y)()*y_scale
 
             plotters.append(gen_plotter(**defaults))
             x_system.append(x_stream)
@@ -886,11 +895,11 @@ class system:
             # 2.1 Parent connectors
             if hasattr(stream, 'parents'):
                 for parent in stream.parents:
-                    x_parent = getattr(parent, x)()/x_scale
-                    y_parent = getattr(parent, y)()/y_scale
+                    x_parent = getattr(parent, x)()*x_scale
+                    y_parent = getattr(parent, y)()*y_scale
                     # If the parent stream has no stages, get parent stream's gas state
-                    p_x = x_parent[-1] if len(x_parent) != 0 else getattr(parent.gas, x)/x_scale
-                    p_y = y_parent[-1] if len(y_parent) != 0 else getattr(parent.gas, y)/y_scale
+                    p_x = x_parent[-1] if len(x_parent) != 0 else getattr(parent.gas, x)*x_scale
+                    p_y = y_parent[-1] if len(y_parent) != 0 else getattr(parent.gas, y)*y_scale
                     if len(stream.components) > 0:
                         x_system.append(np.array([p_x, x_stream[0]]))
                         y_system.append(np.array([p_y, y_stream[0]]))
@@ -924,8 +933,8 @@ class system:
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self._plot(x='p0', x_scale=1/1000, x_label='p$_0$ [kPa]',
-                   y='t0', y_scale=1,      y_label='T$_0$ [K]',
+        self._plot(x='p0', x_label='p$_0$ [kPa]',
+                   y='t0', y_label='T$_0$ [K]',
                    **{**args, **kwargs})
 
     def plot_p_V(self,
@@ -937,8 +946,8 @@ class system:
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self._plot(x='V',                  x_label='v$_0$ [m$^3$/n]',
-                   y='p0', y_scale=1/1000, y_label='p$_0$ [kPa]',
+        self._plot(x='V',  x_label='v$_0$ [m$^3$/n]',
+                   y='p0', y_label='p$_0$ [kPa]',
                    **{**args, **kwargs})
 
     def plot_T_S(self,
