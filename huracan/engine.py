@@ -35,6 +35,10 @@ class component:
                 k = k[0] + '0'
             setattr(self, k, v)
 
+        # Gas state variables
+        for sv in ['V', 'S', 'H']:
+            setattr(self, sv, getattr(gas, sv))
+
 
 class shaft:
     """
@@ -206,8 +210,8 @@ class stream:
         assert hasattr(self, 'gas'), 'The stream must have a gas attribute for' \
                                      'the stream diversion operation to be possible.'
 
-        main = stream(self.gas, fr=fr)
-        div  = stream(self.gas, fr=1-fr)
+        main = stream(self.gas, fr=fr, parents=[self])
+        div  = stream(self.gas, fr=1-fr, parents=[self])
 
         # Stream ID
         main.stream_id[0] = self.stream_id[0] + 1
@@ -218,8 +222,8 @@ class stream:
             main.stream_id.append(names[0])
             div.stream_id.append(names[1])
         else:
-            mf_matrix = np.array([[main.gas.mf, main],
-                                  [div.gas.mf, div]])
+            mf_matrix = np.array([[main.gas.mf * fr,     main],
+                                  [div.gas.mf  * (1-fr), div]])
             mf_matrix = mf_matrix[mf_matrix[:, 0].argsort()[::-1]]
 
             for i in range(mf_matrix[:, 1].size):
@@ -357,26 +361,33 @@ class stream:
         """
         Total temperature vector.
         """
+        assert self.ran, 'The stream must be run to obtain the total temperature at each stage'
+
         return np.array([c.t0 for c in self.components])
 
     def p0(self):
         """
         Total pressure vector.
         """
+        assert self.ran, 'The stream must be run to obtain the total pressure at each stage'
+
         return np.array([c.p0 for c in self.components])
 
     def V(self):
         """
-        Specific total volume vector.
+        Specific volume vector.
         """
-        return np.array([c.t0*R/c.p0 for c in self.components])
+        assert self.ran, 'The stream must be run to obtain the specific volume at each stage'
+
+        return np.array([c.V for c in self.components])
 
     def S(self):                 # TODO: implement
         """
         Specific entropy vector.
         """
-        S = lambda t0, p0: 1
-        return np.array([S(t0=c.t0, p0=c.p0) for c in self.components])
+        assert self.ran, 'The stream must be run to obtain the specific entropy at each stage'
+
+        return np.array([c.S for c in self.components])
 
     """
     Stream runtime functions
@@ -504,7 +515,7 @@ class stream:
 
     def _plot_T_p(self,
                   show=False,
-                  label=None,
+                  plot_label=None,
                   color=colorscheme_one()[0],
                   **kwargs):
         """
@@ -520,7 +531,7 @@ class stream:
 
         self.plot_cycle_graph(self.p0()/1000, self.t0(),
                               color=color,
-                              label=label,
+                              plot_label=plot_label,
                               show=show,
                               # Further customization
                               x_tick_ndecimals=2,
@@ -528,7 +539,7 @@ class stream:
 
     def _plot_p_V(self,
                   show=False,
-                  label=None,
+                  plot_label=None,
                   color=colorscheme_one()[0],
                   **kwargs):
         """
@@ -544,7 +555,7 @@ class stream:
 
         self.plot_cycle_graph(self.V(), self.p0()/1000,
                               color=color,
-                              label=label,
+                              plot_label=plot_label,
                               show=show,
                               # Further customization
                               y_tick_ndecimals=2,
@@ -552,7 +563,7 @@ class stream:
 
     def _plot_T_S(self,                              # TODO: implement
                   show=False,
-                  label=None,
+                  plot_label=None,
                   color=colorscheme_one()[0],
                   **kwargs):
         """
@@ -566,14 +577,14 @@ class stream:
 
         further_custom = {**defaults, **kwargs}
 
-    def _plot_cycle_graph(self,
-                          x, y,
-                          label,
-                          x_label, y_label,
-                          color=colorscheme_one()[0],
-                          show=False,
-                          **kwargs
-                          ):
+    def plot_cycle_graph(self,
+                         x, y,
+                         plot_label,
+                         x_label, y_label,
+                         color=colorscheme_one()[0],
+                         show=False,
+                         **kwargs
+                         ):
         """
         Cycle plot composed of an MPL Plotter line and scatter plot.
 
@@ -615,8 +626,10 @@ class stream:
                 zorder=1)
         # Stages
         scatter(x=x, y=y,
+                # Figure
+                fig=fig,
                 # Further customization
-                plot_label=label,
+                plot_label=plot_label,
                 x_label=x_label,
                 y_label=y_label,
                 show=show,
@@ -695,7 +708,7 @@ class stream:
 
     def plot_T_p(self,
                  show=False,
-                 label=None,
+                 plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
         args = locals()
@@ -706,7 +719,7 @@ class stream:
 
     def plot_p_V(self,
                  show=False,
-                 label=None,
+                 plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
         args = locals()
@@ -717,7 +730,7 @@ class stream:
 
     def plot_T_S(self,
                  show=False,
-                 label=None,
+                 plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
         args = locals()
@@ -725,20 +738,6 @@ class stream:
         args.pop('kwargs', None)
 
         self._system_takeover('plot_T_S', **{**args, **kwargs})
-
-    def plot_cycle_graph(self,
-                         x, y,
-                         label,
-                         x_label, y_label,
-                         color=colorscheme_one()[0],
-                         show=False,
-                         **kwargs
-                         ):
-        args = locals()
-        args.pop('self', None)
-        args.pop('kwargs', None)
-
-        self._system_takeover('plot_cycle_graph', **args)
 
 
 class system:
@@ -790,13 +789,23 @@ class system:
         """
         Run stream system.
         """
-        streams = self.streams
+
+        self._sort_streams()
+
         n = 0
-        while not all([s.ran for s in streams]):
-            for s in streams:
+        while not all([s.ran for s in self.streams]):
+            for s in self.streams:
                 if s.stream_id[0] == n:
                     s._run(log)
             n += 1
+
+    def _sort_streams(self):
+        """
+        Sort system streams based on their stream ID
+        """
+        ids     = [''.join(str(c) for c in stream.stream_id) for stream in self.streams]
+        indexes = [float(id.replace('m', '.1').replace('s', '.2')) for id in ids]
+        self.streams = [s for _, s in sorted(zip(indexes, self.streams))]
 
     def fmf(self):
         pass
@@ -807,50 +816,140 @@ class system:
     def sfc(self):
         pass
 
-    def plot_T_p(self):                             # TODO: implement diagram integrating all streams
+    def _plot(self,
+              x, y,
+              x_scale=1, y_scale=1,
+              x_label=None, y_label=None,
+              show=False,
+              plot_label=None,                  # When called from a _system_takeover the plot_label and color
+              color=colorscheme_one()[0],       # arguments are passed to the function, but disregarded.
+              **kwargs):
+        """
+        System plot
+        -----------
 
-        plotters = []
-        x        = []
-        y        = []
+        x and y are the stream parameters to be
+        plotted for each stream.
 
+        Process
+        1. Create figure
+        2. Create state variable and plotters vectors
+            2.1 Parent connectors
+        3. comparison call
+
+        comparison call
+            - fig=None, ax=None -> plot_cycle_graph -> fig in **kwargs keys
+                - fig=None, ax=None -> line, scatter
+                    - line, scatter plot onto active figure, axis
+
+        :param x_scale: Scaling factor.
+        :param y_scale: Scaling factor.
+
+        :type x:        str
+        :type y:        str
+        :type x_scale:  float
+        :type y_scale:  float
+        """
+        plotters   = []
+        x_system   = []
+        y_system   = []
+
+        # 1. Create figure
+        figure((9, 5))
+
+        # 2. Create state variable and plotters vectors
         for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
-                                                               label=None,
-                                                               x_label='', y_label='',
-                                                               color=colorscheme_one()[self.streams.index(stream)]))
-            x.append(stream.p0())
-            y.append(stream.v0())
 
-        comparison(x=x, y=y, f=plotters)
+            # Plot defaults
+            defaults = {'plot_label': f'{".".join([str(c) for c in stream.stream_id])}',
+                        'x_label': x_label,
+                        'y_label': y_label,
+                        'color': colorscheme_one()[self.streams.index(stream)],
+                        'zorder': 10-self.streams.index(stream)
+                        }
 
-    def plot_p_V(self):                             # TODO: implement diagram integrating all streams
+            def gen_plotter(**defaults):
+                """
+                Returns a plotter using the defaults.
+                Any keyword arguemnts passed to the
+                _plot function overwrite the defaults.
+                """
+                return lambda x, y, **kwargs: stream.plot_cycle_graph(x=x, y=y, **{**kwargs, **defaults})
 
-        plotters = []
-        x        = []
-        y        = []
+            x_stream = getattr(stream, x)()/x_scale
+            y_stream = getattr(stream, y)()/y_scale
 
-        for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
-                                                               label=None,
-                                                               x_label='', y_label='',
-                                                               color=colorscheme_one()[self.streams.index(stream)]))
-            x.append(stream.p0())
-            y.append(stream.V())
+            plotters.append(gen_plotter(**defaults))
+            x_system.append(x_stream)
+            y_system.append(y_stream)
 
-        comparison(x=x, y=y, f=plotters)
+            # 2.1 Parent connectors
+            if hasattr(stream, 'parents'):
+                for parent in stream.parents:
+                    x_parent = getattr(parent, x)()/x_scale
+                    y_parent = getattr(parent, y)()/y_scale
+                    # If the parent stream has no stages, get parent stream's gas state
+                    p_x = x_parent[-1] if len(x_parent) != 0 else getattr(parent.gas, x)/x_scale
+                    p_y = y_parent[-1] if len(y_parent) != 0 else getattr(parent.gas, y)/y_scale
+                    if len(stream.components) > 0:
+                        x_system.append(np.array([p_x, x_stream[0]]))
+                        y_system.append(np.array([p_y, y_stream[0]]))
+                        plotters.append(gen_plotter(color=defaults['color'], x_label=None, y_label=None))
 
-    def plot_T_S(self):                             # TODO: implement diagram integrating all streams
+        # 2.2 Remove streams with no stages
+        mask_x = np.array([a.size != 0 for a in x_system])
+        mask_y = np.array([a.size != 0 for a in y_system])
+        mask = mask_x * mask_y  # Ensure that any x-y array pairs with an empty array are removed
 
-        plotters = []
-        x        = []
-        y        = []
+        x_system = np.array(x_system, dtype='object')[mask].tolist()
+        y_system = np.array(y_system, dtype='object')[mask].tolist()
+        plotters = np.array(plotters, dtype='object')[mask].tolist()
 
-        for stream in self.streams:
-            plotters.append(lambda s, x, y: s.plot_cycle_graph(x=x, y=y,
-                                                               label=None,
-                                                               x_label='', y_label='',
-                                                               color=colorscheme_one()[self.streams.index(stream)]))
-            x.append(stream.p0())
-            y.append(stream.V())
+        # 4. comparison call
+        #     - fig=None, ax=None -> plot_cycle_graph -> fig in **kwargs keys
+        #         - fig=None, ax=None -> line, scatter
+        #             - line, scatter plot onto active figure, axis
+        comparison(x=x_system, y=y_system, f=plotters,
+                   legend_loc=(0.875, 0.4),
+                   show=show,
+                   **kwargs)
 
-        comparison(x=x, y=y, f=plotters)
+    def plot_T_p(self,
+                 show=False,
+                 plot_label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs
+                 ):
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._plot(x='p0', x_scale=1/1000, x_label='p$_0$ [kPa]',
+                   y='t0', y_scale=1,      y_label='T$_0$ [K]',
+                   **{**args, **kwargs})
+
+    def plot_p_V(self,
+                 show=False,
+                 plot_label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):                             # TODO: implement diagram integrating all streams
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._plot(x='V',                  x_label='v$_0$ [m$^3$/n]',
+                   y='p0', y_scale=1/1000, y_label='p$_0$ [kPa]',
+                   **{**args, **kwargs})
+
+    def plot_T_S(self,
+                 show=False,
+                 plot_label=None,
+                 color=colorscheme_one()[0],
+                 **kwargs):                             # TODO: implement diagram integrating all streams
+        args = locals()
+        args.pop('self', None)
+        args.pop('kwargs', None)
+
+        self._plot(x='S',  x_label='S [J/K]',
+                   y='t0', y_label='T$_0$ [K]',
+                   **{**args, **kwargs})
