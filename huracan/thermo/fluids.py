@@ -93,8 +93,8 @@ class gas(fluid):
         - H - Specific enthalpy
         """
         self.V = self.t0*R/self.p0
-        self.S = 1
-        self.H = 1
+        self.S = 1                          #TODO: implement
+        self.H = 1                          #TODO: implement
 
     def __add__(self, other):
         """

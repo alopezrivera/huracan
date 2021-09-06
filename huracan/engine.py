@@ -381,7 +381,7 @@ class stream:
 
         return np.array([c.V for c in self.components])
 
-    def S(self):                 # TODO: implement
+    def S(self):
         """
         Specific entropy vector.
         """
@@ -473,7 +473,7 @@ class stream:
         """
         Specific fuel consumption
         """
-        return self.fmf() / self.thrust()
+        return self.fmf()/self.thrust()
 
     # def Q_in(self):               #TODO: verify and implement efficiency calculations
     #     """
@@ -561,7 +561,7 @@ class stream:
                               y_tick_ndecimals=2,
                               **further_custom)
 
-    def _plot_T_S(self,                              # TODO: implement
+    def _plot_T_S(self,
                   show=False,
                   plot_label=None,
                   color=colorscheme_one()[0],
@@ -576,6 +576,14 @@ class stream:
                     'y_label': 'T$_0$ [K]'}
 
         further_custom = {**defaults, **kwargs}
+
+        self.plot_cycle_graph(self.S(), self.t0() / 1000,
+                              color=color,
+                              plot_label=plot_label,
+                              show=show,
+                              # Further customization
+                              y_tick_ndecimals=2,
+                              **further_custom)
 
     def plot_cycle_graph(self,
                          x, y,
@@ -935,13 +943,14 @@ class system:
 
         self._plot(x='p0', x_label='p$_0$ [kPa]',
                    y='t0', y_label='T$_0$ [K]',
-                   **{**args, **kwargs})
+                   **{**args, **kwargs}
+                   )
 
     def plot_p_V(self,
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
-                 **kwargs):                             # TODO: implement diagram integrating all streams
+                 **kwargs):
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
@@ -954,7 +963,7 @@ class system:
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
-                 **kwargs):                             # TODO: implement diagram integrating all streams
+                 **kwargs):
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
