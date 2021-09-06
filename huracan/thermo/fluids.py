@@ -85,6 +85,17 @@ class gas(fluid):
 
         self.absolute()
 
+    def state(self):
+        """
+        Update gas state variables.
+        - V - Specific volume
+        - S - Specific entropy
+        - H - Specific enthalpy
+        """
+        self.V = self.t0*R/self.p0
+        self.S = 1
+        self.H = 1
+
     def __add__(self, other):
         """
         Mixture creation operator: <gas> + <gas>
@@ -138,6 +149,8 @@ class gas(fluid):
         self.t0 = p.t0
         self.p0 = p.p0
 
+        self.state()
+
         return p
 
     def diffusion(self, eta,
@@ -183,6 +196,8 @@ class gas(fluid):
 
         self.t0 = p.t01
         self.p0 = p.p01
+
+        self.state()
 
         return p
 
@@ -231,6 +246,8 @@ class gas(fluid):
         self.t0 = p.t01
         self.p0 = p.p01
 
+        self.state()
+
         return p
 
     def expansion(self, eta,
@@ -278,6 +295,8 @@ class gas(fluid):
         self.t0 = p.t01
         self.p0 = p.p01
 
+        self.state()
+
         return p
 
     def heat_addition(self,
@@ -311,6 +330,8 @@ class gas(fluid):
 
         self.t0 = p.t01
         self.p0 = p.p01
+
+        self.state()
 
         return p
 
