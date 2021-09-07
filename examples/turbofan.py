@@ -1,3 +1,8 @@
+"""
+Huracan
+-------
+Three-spool turbofan engine.
+"""
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
 from huracan.components import inlet, fan, compressor, combustion_chamber, turbine, afterburner, nozzle, power_plant
@@ -12,31 +17,31 @@ bpr = 9.6
 fuel = fuel(LHV=43e6)
 
 g = gas(mf=mf,
-        cp=lambda T: 1150 if T > 600 else 1000,
-        k=lambda T: 1.33 if T > 600 else 1.4,
+        cp=lambda T: 1150 if T > 1000 else 1000,
+        k=lambda T: 1.33 if T > 1000 else 1.4,
         m=M, t_0=t, p_0=p)
 
 i  = inlet             (PI=0.98)
-fn = fan               (eta=0.92, PI=1.54, bpr=bpr)
-c1 = compressor        (eta=0.89, PI=1.54)
-c2 = compressor        (eta=0.89, PI=9.61)
-cc = combustion_chamber(fuel=fuel, eta=0.965, PI=0.98)
-t1 = turbine           (eta=0.89)
-t2 = turbine           (eta=0.89)
-n  = nozzle            (eta=0.5)
+fn = fan               (eta=0.94,  PI=1.54)
+c1 = compressor        (eta=0.991, PI=9.61)
+c2 = compressor        (eta=0.92,  PI=3.38)
+cc = combustion_chamber(fuel=fuel, eta=0.985, PI=0.99, t01=1838)
+t1 = turbine           (eta=0.96)
+t2 = turbine           (eta=0.965)
+t3 = turbine           (eta=0.97)
+nc = nozzle            (eta=0.95)
+nf = nozzle            (eta=0.96)
 
-shaft1 = shaft(fn, c1, t2, eta=0.98, eta_gearbox=0.975)
-shaft2 = shaft(c2, t1, eta=0.98)
+shaft1 = shaft(fn, t3, eta=0.995)
+shaft2 = shaft(c1, t2, eta=0.995)
+shaft3 = shaft(c2, t1, eta=0.995)
 
 stream = g-i-fn
 
 s1core, s1bypass = stream*(bpr/(bpr+1))
 
-s1core-c1-c2-cc-t1-t2
-
-s2 = s1core-s1bypass
-
-s2-n
+s1core-c1-c2-cc-t1-t2-t3-nc
+s1bypass-nf
 
 stream.run()
 

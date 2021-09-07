@@ -2,12 +2,7 @@
 Huracan
 -------
 
-Two-spool, reheated turbojet engine.
-
-- 2 compressors
-- 2 turbines
-- Electrical power plant
-
+Two-spool, reheated turbojet engine with electrical power plant.
 """
 
 from huracan.engine import shaft
