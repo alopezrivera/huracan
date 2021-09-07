@@ -52,7 +52,10 @@ Simple turbojet engine with 2 compressors and 2 turbines in a 2 shaft configurat
     # Plot T-p diagram
     stream.plot_T_p(show=True, color='orange')
 
+<p align="center">
+  <img height=450 src="docs/figures/log.png" />
+</p>
+
 | ![alt text](docs/figures/Tp.png "T-p plot") |
 | --- |
 | ![alt text](docs/figures/pv.png "p-v plot") |
-| ![alt text](docs/figures/log.png "console log") |
