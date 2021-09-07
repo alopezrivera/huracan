@@ -431,68 +431,48 @@ class stream:
              The exit velocity is the velocity of sound before the nozzle
              exit.
         """
-        if hasattr(self, 'system') and self in self.system.parents():
-            return 0
+        # Absolute temperature before the stream exit (likely but not necessarily a nozzle)
+        if len(self.components) > 1:
+            # If the stream has more components than 1, the absolute temperature
+            # after the component previous to the last one is taken.
+            if self.components[-1].__class__.__name__ == 'nozzle':
+                t_before_exit = self.components[-2].t0
+            else:
+                t_before_exit = self.components[-1].t0
         else:
-            # Absolute temperature before the stream exit (likely but not necessarily a nozzle)
-            if len(self.components) > 1:
-                # If the stream has more components than 1, the absolute temperature
-                # after the component previous to the last one is taken.
-                if self.components[-1].__class__.__name__ == 'nozzle':
-                    t_before_exit = self.components[-2].t0
+            if hasattr(self, 'parents'):
+                # If the stream has a single component and a parent stream or streams
+                if len(self.parents) > 1:
+                    # If the stream has more than a single parent stream, the gases
+                    # of each parent are copied, merged and the absolute temperature
+                    # of the resulting gas mixture is taken.
+                    for i in range(len(self.parents)):
+                        if i == 0:
+                            g = deepcopy(self.parents[i].gas)
+                        else:
+                            g += deepcopy(self.parents[i].gas)
+                    t_before_exit = g.t0
                 else:
-                    t_before_exit = self.components[-1].t0
+                    # If the stream has a single parent, the absolute temperature
+                    # of the parent's gas is taken.
+                    t_before_exit = self.parents[0].gas.t0
             else:
-                if hasattr(self, 'parents'):
-                    # If the stream has a single component and a parent stream or streams
-                    if len(self.parents) > 1:
-                        # If the stream has more than a single parent stream, the gases
-                        # of each parent are copied, merged and the absolute temperature
-                        # of the resulting gas mixture is taken.
-                        for i in range(len(self.parents)):
-                            if i == 0:
-                                g = deepcopy(self.parents[i].gas)
-                            else:
-                                g += deepcopy(self.parents[i].gas)
-                        t_before_exit = g.t0
-                    else:
-                        # If the stream has a single parent, the absolute temperature
-                        # of the parent's gas is taken.
-                        t_before_exit = self.parents[0].gas.t0
-                else:
-                    # Is the stream has a single component and no parent streams,
-                    # it is assumed that the setup consists of a intake-nozzle
-                    # setup, and the absolute temperature of the moving gas is
-                    # taken.
-                    t_before_exit = deepcopy(self.gas).absolute().t01
+                # Is the stream has a single component and no parent streams,
+                # it is assumed that the setup consists of a intake-nozzle
+                # setup, and the absolute temperature of the moving gas is
+                # taken.
+                t_before_exit = deepcopy(self.gas).absolute().t01
 
-            # Ambient absolute temperature
-            def walk_up(s):
-                """
-                Get the absolute ambient temperature from the stream.
-                If the stream has parents, it iterates through the
-                parents until finding a parent stream with no parents:
-                it then copies that stream and obtains the absolute
-                ambient temperature from it.
-                """
-                if hasattr(s, 'parents'):
-                    for p in s.parents:
-                        return walk_up(p)
-                else:
-                    return deepcopy(s.gas).absolute().t0
-
-            t_ambient = walk_up(self)
-
-            if self.choked:
-                return (self.gas.k(t_before_exit)*R*t_before_exit)**0.5         # M=1 immediately before nozzle exit
-            else:
-                assert t_before_exit - t_ambient > 0, 'The total temperature of the flow is lower before ' \
-                                                        'the nozzle tha outside the engine: this happens due to the ' \
-                                                        'compressors not providing enough energy to the flow. You must ' \
-                                                        'either increase the pressure ratio of the compressors or ' \
-                                                        'decrease the power extracted from the flow to solve the ' \
-                                                        'inconsistency.'
-                return (2*self.gas.cp(t_before_exit)*(t_before_exit - t_ambient))**0.5    # Heat -> Kinetic energy
+        if self.choked:
+            return (self.gas.k(t_before_exit)*R*t_before_exit)**0.5         # M=1 immediately before nozzle exit
+        else:
+            assert t_before_exit - self.gas.t0 > 0, 'The total temperature of the flow is lower before ' \
+                                                    'the nozzle tha outside the engine: this happens due to the ' \
+                                                    'compressors not providing enough energy to the flow. You must ' \
+                                                    'either increase the pressure ratio of the compressors or ' \
+                                                    'decrease the power extracted from the flow to solve the ' \
+                                                    'inconsistency.'
+            return (2*self.gas.cp(t_before_exit)*(t_before_exit - self.gas.t0))**0.5    # Heat -> Kinetic energy
 
     def _A_exit(self):
         """
@@ -520,7 +500,7 @@ class stream:
         If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
         """
         if self.choked:
-            return self.gas.mf * (self._v_exit() - self.gas.v_0) + self.A_exit() * (
+            return self.gas.mf * (self._v_exit() - self.gas.v_0) + self._A_exit() * (
                         self.gas.p0 - self.gas.p_0)
         else:
             return self.gas.mf * (self._v_exit() - self.gas.v_0)
@@ -969,7 +949,6 @@ class system:
     """
     Stream outlet flow characteristics
     """
-
     def v_exit(self):
         """
         Flow exit velocity
@@ -982,14 +961,15 @@ class system:
              The exit velocity is the velocity of sound before the nozzle
              exit.
         """
-        v = [s._v_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
+        v = [s._v_exit() for s in self.streams if s not in self.parents()]
         return v[0] if len(v) == 1 else v
 
     def A_exit(self):
         """
         Nozzle exit area
         """
-        return [s._A_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
+        a = [s._A_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
+        return a[0] if len(a) == 1 else a
 
     """
     System performance analysis
@@ -998,7 +978,7 @@ class system:
         return sum([s._fmf() for s in self.streams])
 
     def flow_thrust(self):
-        return sum([s._flow_thrust() for s in self.streams if s not in self.parents])
+        return sum([s._flow_thrust() for s in self.streams if s not in self.parents()])
 
     def prop_thrust(self):
         return sum([s._prop_thrust() for s in self.streams])
