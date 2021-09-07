@@ -224,7 +224,7 @@ class stream:
         else:
             mf_matrix = np.array([[main.gas.mf * fr,     main],
                                   [div.gas.mf  * (1-fr), div]])
-            mf_matrix = mf_matrix[mf_matrix[:, 0].argsort()[::-1]]
+            mf_matrix = mf_matrix[mf_matrix[:, 0].argsort()]
 
             for i in range(mf_matrix[:, 1].size):
                 sub_id = 'm' if i == 0 else f's{i}' if i > 1 else 's'
@@ -237,6 +237,26 @@ class stream:
             system(self, main, div)
 
         return main, div
+
+    def __getitem__(self, item):
+        """
+        Component retrieval operator: <stream>[<component stage>]
+
+        :type item: str
+        """
+        return self._system_takeover('__getitem__', item)
+
+    def ___getitem__(self, item):
+        """
+        Retrieve any stream component by its stage name.
+
+        :type item: str
+        """
+        assert item in self.stages(), 'Specified a non-existent stage.'
+
+        for c in self.components:
+            if c.stage == item:
+                return c
 
     """
     Utilities
@@ -274,38 +294,30 @@ class stream:
 
     def _n_instances(self, comp):
         """
-        Calculate the number of instances of a given component
-        in the stream instance and return:
-        - n=0: '' (empty string)
-        - n>0: str(n)
+        Calculate the number of instances of a given component's
+        parent class in the stream (n), and its index in the
+        stream's components list (i).
 
-        If n=1, the stage name of the first component instance
-        will be changed to add 0 after its stage code.
-        Thus, if a there is a single instance of a component
-        with stage code <code>, its stage name will be
-            <code>
-        while if there are n instances, their stage names will be
-            <code>0
-            <code>1
-              ''
-            <code>n
+        The index of the component is returned as follows:
+        - If the given component is the only instance of its parent
+          class in the stream (n = 1):
+            - ''                                     (empty string)
+        - If the given component is one of more instances of its
+          parent class in the stream (n > 1):
+            - str(i + 1)                    (numeral starting at 1)
 
         :type comp: component
         """
-        n = 0
 
+        i = 0       # Component index
+        n = 0       # Number of instances of the input component's class in the stream
         for c in self.components:
             if comp is c:
-                break
-            if comp.__class__.__name__ == c.__class__.__name__ and comp is not c:
+                i = n
+            if comp.__class__.__name__ == c.__class__.__name__:
                 n += 1
 
-        if n == 1:
-            for i in range(len(self.components)):
-                if comp.__class__.__name__ == self.components[i].__class__.__name__ and comp is not self.components[i]:
-                    self.components[i].stage += str(0)
-
-        return '' if n == 0 else str(n)
+        return '' if n == 1 else str(i + 1)
 
     def _log(self):
 
@@ -322,41 +334,56 @@ class stream:
             print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
 
     """
-    Stream state
+    Stream runtime functions
     """
-    def v_exit(self):
+    def _run(self, log=True):
         """
-        Flow exit velocity
-
-        Assumptions:
-        - If the flow is not choked:
-             The thermal energy lost by the gas as it leaves the nozzle
-             is transformed into kinetic energy without losses.
-        - If the flow is choked:
-             The exit velocity is the velocity of sound before the nozzle
-             exit.
+        Execute the transfer functions of all components in the stream
+        on the instance's gas class instance.
         """
-        t_before_nozzle = self.components[-2].t0
 
-        if self.choked:
-            return (self.gas.k(t_before_nozzle)*R*t_before_nozzle)**0.5     # M=1 immediately before nozzle exit
+        self._runtime()
+
+        assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
+
+        self.choked = False                                 # FIXME: choked flow implementation is ugly
+
+        for c in self.components:
+            c(self.gas)                     # Run thermodynamic process on stream gas
+            c.stage = self._stage_name(c)   # Set component stage name
+
+            if hasattr(c, 'choked') and c.choked:           # FIXME: ugly
+                self.choked = c.choked
+
+        # Indicate stream has been run.
+        self.ran = True
+
+        if log:
+            self._log()
+
+    def _runtime(self):
+        if hasattr(self, 'parents') and len(self.parents) > 1:
+            self._merge()
+
+        for k, v in self.runtime.items():
+            f = getattr(self, '_'+k)
+            f(v)
+
+    def _merge(self):
+        if hasattr(self, 'gas'):
+            for s in self.parents:
+                self.gas += s.gas
         else:
+            self.gas = self.parents[0].gas
+            for s in self.parents[1:]:
+                self.gas += s.gas
 
-            assert t_before_nozzle - self.gas.t0 > 0, 'The total temperature of the flow is lower before ' \
-                                                      'the nozzle tha outside the engine: this happens due to the ' \
-                                                      'compressors not providing enough energy to the flow. You must ' \
-                                                      'either increase the pressure ratio of the compressors or ' \
-                                                      'decrease the power extracted from the flow to solve the ' \
-                                                      'inconsistency.'
+    def _fr(self, fr):
+        self.gas, _ = fr * deepcopy(self.gas)
 
-            return (2*self.gas.cp(t_before_nozzle)*(t_before_nozzle - self.gas.t0))**0.5    # Heat -> Kinetic energy
-
-    def A_exit(self):
-        """
-        Nozzle exit area
-        """
-        return self.gas.mf*R*self.gas.t0/(self.gas.p0*self.v_exit())
-
+    """
+    Stream fluid state
+    """
     def t0(self):
         """
         Total temperature vector.
@@ -390,52 +417,88 @@ class stream:
         return np.array([c.S for c in self.components])
 
     """
-    Stream runtime functions
+    Stream outlet flow characteristics
     """
-    def _run(self, log=True):
+    def _v_exit(self):
         """
-        Execute the transfer functions of all components in the stream
-        on the instance's gas class instance.
+        Flow exit velocity
+
+        Assumptions:
+        - If the flow is not choked:
+             The thermal energy lost by the gas as it leaves the nozzle
+             is transformed into kinetic energy without losses.
+        - If the flow is choked:
+             The exit velocity is the velocity of sound before the nozzle
+             exit.
         """
-
-        self._runtime()
-
-        assert hasattr(self, 'gas'), 'stream does not have a gas attribute.'
-
-        self.choked = False                                 # FIXME: choked flow implementation is ugly
-
-        for c in self.components:
-            c(self.gas)
-            c.stage = self._stage_name(c)
-
-            if hasattr(c, 'choked') and c.choked:           # FIXME: ugly
-                self.choked = c.choked
-
-        # Indicate stream has been run.
-        self.ran = True
-
-        if log:
-            self._log()
-
-    def _runtime(self):
-        if hasattr(self, 'parents') and len(self.parents) > 1:
-            self._merge()
-
-        for k, v in self.runtime.items():
-            f = getattr(self, '_'+k)
-            f(v)
-
-    def _merge(self):
-        if hasattr(self, 'gas'):
-            for s in self.parents:
-                self.gas += s.gas
+        if hasattr(self, 'system') and self in self.system.parents():
+            return 0
         else:
-            self.gas = self.parents[0].gas
-            for s in self.parents[1:]:
-                self.gas += s.gas
+            # Absolute temperature before the stream exit (likely but not necessarily a nozzle)
+            if len(self.components) > 1:
+                # If the stream has more components than 1, the absolute temperature
+                # after the component previous to the last one is taken.
+                if self.components[-1].__class__.__name__ == 'nozzle':
+                    t_before_exit = self.components[-2].t0
+                else:
+                    t_before_exit = self.components[-1].t0
+            else:
+                if hasattr(self, 'parents'):
+                    # If the stream has a single component and a parent stream or streams
+                    if len(self.parents) > 1:
+                        # If the stream has more than a single parent stream, the gases
+                        # of each parent are copied, merged and the absolute temperature
+                        # of the resulting gas mixture is taken.
+                        for i in range(len(self.parents)):
+                            if i == 0:
+                                g = deepcopy(self.parents[i].gas)
+                            else:
+                                g += deepcopy(self.parents[i].gas)
+                        t_before_exit = g.t0
+                    else:
+                        # If the stream has a single parent, the absolute temperature
+                        # of the parent's gas is taken.
+                        t_before_exit = self.parents[0].gas.t0
+                else:
+                    # Is the stream has a single component and no parent streams,
+                    # it is assumed that the setup consists of a intake-nozzle
+                    # setup, and the absolute temperature of the moving gas is
+                    # taken.
+                    t_before_exit = deepcopy(self.gas).absolute().t01
 
-    def _fr(self, fr):
-        self.gas, _ = fr * deepcopy(self.gas)
+            # Ambient absolute temperature
+            def walk_up(s):
+                """
+                Get the absolute ambient temperature from the stream.
+                If the stream has parents, it iterates through the
+                parents until finding a parent stream with no parents:
+                it then copies that stream and obtains the absolute
+                ambient temperature from it.
+                """
+                if hasattr(s, 'parents'):
+                    for p in s.parents:
+                        return walk_up(p)
+                else:
+                    return deepcopy(s.gas).absolute().t0
+
+            t_ambient = walk_up(self)
+
+            if self.choked:
+                return (self.gas.k(t_before_exit)*R*t_before_exit)**0.5         # M=1 immediately before nozzle exit
+            else:
+                assert t_before_exit - t_ambient > 0, 'The total temperature of the flow is lower before ' \
+                                                        'the nozzle tha outside the engine: this happens due to the ' \
+                                                        'compressors not providing enough energy to the flow. You must ' \
+                                                        'either increase the pressure ratio of the compressors or ' \
+                                                        'decrease the power extracted from the flow to solve the ' \
+                                                        'inconsistency.'
+                return (2*self.gas.cp(t_before_exit)*(t_before_exit - t_ambient))**0.5    # Heat -> Kinetic energy
+
+    def _A_exit(self):
+        """
+        Nozzle exit area
+        """
+        return self.gas.mf*R*self.gas.t0/(self.gas.p0*self._v_exit())
 
     """
     Stream performance analysis
@@ -450,69 +513,91 @@ class stream:
                 fmf += c.fuel.mf
         return fmf
 
-    def _thrust(self):
+    def _flow_thrust(self):
         """
         Flow thrust
 
         If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
         """
-
-        if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
-            propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
-            prop_thrust = sum([prop.thrust(self.gas.v_0) for prop in propellers])
-        else:
-            prop_thrust = 0
-
         if self.choked:
-            return prop_thrust + self.gas.mf * (self.v_exit() - self.gas.v_0) + self.A_exit() * (
+            return self.gas.mf * (self._v_exit() - self.gas.v_0) + self.A_exit() * (
                         self.gas.p0 - self.gas.p_0)
         else:
-            return prop_thrust + self.gas.mf * (self.v_exit() - self.gas.v_0)
+            return self.gas.mf * (self._v_exit() - self.gas.v_0)
+
+    def _prop_thrust(self):
+        """
+        Propeller/propfan thrust
+        """
+        if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
+            propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
+            prop_thrust = sum([prop.flow_thrust(self.gas.v_0) for prop in propellers])
+        else:
+            prop_thrust = 0
+        return prop_thrust
+
+    def _total_thrust(self):
+        """
+        Flow thrust plus propeller/propfan thrust
+        """
+        return self._flow_thrust() + self._prop_thrust()
 
     def _sfc(self):
         """
         Specific fuel consumption
         """
-        return self.fmf()/self.thrust()
+        return self.fmf()/self.flow_thrust()
 
-    # def Q_in(self):               #TODO: verify and implement efficiency calculations
-    #     """
-    #     Heat provided to the flow.
-    #     """
-    #     q_provided = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'combustion_chamber':
-    #             q_provided += c.Q
-    #     return q_provided
-    #
-    # def W_req(self):
-    #     """
-    #     Work required from the flow.
-    #     """
-    #     w_required = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'turbine':
-    #             w_required -= c.w_r()
-    #     return w_required
-    #
-    # def E_balance(self):
-    #     """
-    #     Flow energy balance.
-    #     """
-    #     return self.Q_in() - self.W_req()
-    #
-    # def E_prop(self):
-    #     """
-    #     Energy added to the flow for propulsion.
-    #     """
-    #     return self.v_exit()**2/2
-    #
-    # def prop_efficiency(self):
-    #     """
-    #     Stream propulsive efficiency.
-    #     """
-    #     return self.E_prop()/self.Q_in()
+    def _Q_in(self):               #TODO: verify and implement efficiency calculations
+        """
+        Heat provided to the flow.
+        """
+        q_provided = 0
+        for c in self.components:
+            if c.__class__.__name__ == 'combustion_chamber':
+                q_provided += c.Q
+        return q_provided
 
+    def _W_req(self):
+        """
+        Work required from the flow.
+        """
+        w_required = 0
+        for c in self.components:
+            if c.__class__.__name__ in ['fan',
+                                        'prop',
+                                        'propfan',
+                                        'compressor']:
+                w_required += c.w
+        return w_required
+
+    def _E_balance(self):
+        """
+        Flow energy balance.
+        """
+        return self._Q_in() - self._W_req()
+
+    def _E_prop(self):
+        """
+        Energy added to the flow for propulsion.
+        """
+        return self._v_exit()**2/2
+
+    def _efficiency(self):
+        """
+        Engine efficiency
+        """
+        return self._E_balance()/self._Q_in()
+
+    def _prop_efficiency(self):
+        """
+        Stream propulsive efficiency.
+        """
+        return self._E_prop()/self._Q_in()
+
+    """
+    Plots
+    """
     def _plot_T_p(self,
                   show=False,
                   plot_label=None,
@@ -523,6 +608,8 @@ class stream:
         - Total pressure
         - Total temperature
         """
+
+        figure((9, 5))
 
         defaults = {'x_label': 'p$_0$ [kPa]',
                     'y_label': 'T$_0$ [K]'}
@@ -548,6 +635,8 @@ class stream:
         - Total pressure
         """
 
+        figure((9, 5))
+
         defaults = {'x_label': 'v$_0$ [m$^3$/n]',
                     'y_label': 'p$_0$ [kPa]'}
 
@@ -572,8 +661,10 @@ class stream:
         - Total temperature
         """
 
+        figure((9, 5))
+
         defaults = {'x_label': 'S [J/K/n]',
-                    'y_label': 'T$_0$ [K]'}
+                    'y_label': 'T$_0$ [K]',}
 
         further_custom = {**defaults, **kwargs}
 
@@ -594,15 +685,12 @@ class stream:
                          **kwargs
                          ):
         """
-        Cycle plot composed of an MPL Plotter line and scatter plot.
+        General plot composed of an MPL Plotter line and scatter plot.
 
         The default arguments plus any valid MPL Plotter line plotting
         class arguments can be passed to this function.
         """
-        if not any([k == 'fig' for k in kwargs.keys()]):
-            fig = figure((9, 5))
-        else:
-            fig = kwargs.pop('fig')
+        fig = kwargs.pop('fig', None)
 
         defaults = {
             # Specifics
@@ -646,12 +734,13 @@ class stream:
 
     """
     System takeover and API functions
+    ---------------------------------
     """
-    def _system_takeover(self, method, **kwargs):
+    def _system_takeover(self, method, *args, **kwargs):
         if hasattr(self, 'system'):
-            getattr(self.system, method)(**kwargs)
+            return getattr(self.system, method)(*args, **kwargs)
         else:
-            getattr(self, '_' + method)(**kwargs)
+            return getattr(self, '_' + method)(*args, **kwargs)
 
     def run(self, log=True):
         args = locals()
@@ -659,62 +748,95 @@ class stream:
 
         self._system_takeover('run', **args)
 
+    """
+    Stream outlet flow characteristics
+    """
+    def v_exit(self):
+        """
+        Flow exit velocity
+
+        Assumptions:
+        - If the flow is not choked:
+             The thermal energy lost by the gas as it leaves the nozzle
+             is transformed into kinetic energy without losses.
+        - If the flow is choked:
+             The exit velocity is the velocity of sound before the nozzle
+             exit.
+        """
+        return self._system_takeover('v_exit')
+
+    def A_exit(self):
+        """
+        Nozzle exit area
+        """
+        return self._system_takeover('A_exit')
+
+    """
+    Stream performance analysis
+    """
     def fmf(self):
         """
         Stream fuel mass flow
         """
-        self._system_takeover('fmf')
+        return self._system_takeover('fmf')
 
-    def thrust(self):
+    def flow_thrust(self):
         """
         Flow thrust
         """
-        self._system_takeover('thrust')
+        return self._system_takeover('flow_thrust')
+
+    def prop_thrust(self):
+        return self._system_takeover('prop_thrust')
+
+    def total_thrust(self):
+        return self._system_takeover('total_thrust')
 
     def sfc(self):
         """
         Specific fuel consumption
         """
-        self._system_takeover('sfc')
+        return self._system_takeover('sfc')
 
-    # def Q_in(self):               #TODO: verify and implement efficiency calculations
-    #     """
-    #     Heat provided to the flow.
-    #     """
-    #     q_provided = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'combustion_chamber':
-    #             q_provided += c.Q
-    #     return q_provided
-    #
-    # def W_req(self):
-    #     """
-    #     Work required from the flow.
-    #     """
-    #     w_required = 0
-    #     for c in self.components:
-    #         if c.__class__.__name__ == 'turbine':
-    #             w_required -= c.w_r()
-    #     return w_required
-    #
-    # def E_balance(self):
-    #     """
-    #     Flow energy balance.
-    #     """
-    #     return self.Q_in() - self.W_req()
-    #
-    # def E_prop(self):
-    #     """
-    #     Energy added to the flow for propulsion.
-    #     """
-    #     return self.v_exit()**2/2
-    #
-    # def prop_efficiency(self):
-    #     """
-    #     Stream propulsive efficiency.
-    #     """
-    #     return self.E_prop()/self.Q_in()
+    def Q_in(self):  # TODO: verify and implement efficiency calculations
+        """
+        Heat provided to the flow.
+        """
+        return self._system_takeover('Q_in')
 
+    def W_req(self):
+        """
+        Work required from the flow.
+        """
+        return self._system_takeover('W_req')
+
+    def E_balance(self):
+        """
+        Flow energy balance.
+        """
+        return self._system_takeover('E_balance')
+
+    def E_prop(self):
+        """
+        Energy added to the flow for propulsion.
+        """
+        return self._system_takeover('E_prop')
+
+    def efficiency(self):
+        """
+        Engine efficiency
+        """
+        return self._system_takeover('efficiency')
+
+    def prop_efficiency(self):
+        """
+        Stream propulsive efficiency.
+        """
+        return self._system_takeover('prop_efficiency')
+
+    """
+    Plots
+    """
     def plot_T_p(self,
                  show=False,
                  plot_label=None,
@@ -761,7 +883,7 @@ class system:
         :type args: stream
         """
         self.streams = []
-        self._gobble(args)
+        self._gobble(list(args))
 
     """
     Operators
@@ -772,7 +894,7 @@ class system:
 
         :type args: stream
         """
-        self._gobble(args)
+        self._gobble(list(args))
 
     def _gobble(self, streams):
         """
@@ -790,6 +912,22 @@ class system:
         """
         streams = list(set(self.streams) & set(other.streams))
         return system(*streams)
+
+    def __getitem__(self, item):
+        """
+        Retrieve any stream component by its stage name.
+
+        :type item: str
+        """
+        components = []
+        for s in self.streams:
+            components += s.components
+
+        assert item in [c.stage for c in components], 'Specified a non-existent stage.'
+
+        for c in components:
+            if c.stage == item:
+                return c
 
     """
     System functions
@@ -816,15 +954,100 @@ class system:
         indexes = [float(id.replace('m', '.1').replace('s', '.2')) for id in ids]
         self.streams = [s for _, s in sorted(zip(indexes, self.streams))]
 
-    def fmf(self):
-        pass
+    def parents(self):
+        """
+        Return all system streams with children.
+        Useful to not calculate thrust, exit velocity
+        and other stream outlet values for streams
+        flowing to children streams.
+        """
+        parents = []
+        for s in self.streams:
+            parents += s.parents if hasattr(s, 'parents') else []
+        return parents
 
-    def thrust(self):
-        pass
+    """
+    Stream outlet flow characteristics
+    """
+
+    def v_exit(self):
+        """
+        Flow exit velocity
+
+        Assumptions:
+        - If the flow is not choked:
+             The thermal energy lost by the gas as it leaves the nozzle
+             is transformed into kinetic energy without losses.
+        - If the flow is choked:
+             The exit velocity is the velocity of sound before the nozzle
+             exit.
+        """
+        v = [s._v_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
+        return v[0] if len(v) == 1 else v
+
+    def A_exit(self):
+        """
+        Nozzle exit area
+        """
+        return [s._A_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
+
+    """
+    System performance analysis
+    """
+    def fmf(self):
+        return sum([s._fmf() for s in self.streams])
+
+    def flow_thrust(self):
+        return sum([s._flow_thrust() for s in self.streams if s not in self.parents])
+
+    def prop_thrust(self):
+        return sum([s._prop_thrust() for s in self.streams])
+
+    def total_thrust(self):
+        return self.flow_thrust() + self.prop_thrust()
 
     def sfc(self):
-        pass
+        return self.fmf()/self.flow_thrust()
 
+    def Q_in(self):  # TODO: verify and implement efficiency calculations
+        """
+        Heat provided to the flow.
+        """
+        return sum([s._Q_in() for s in self.streams])
+
+    def W_req(self):
+        """
+        Work required from the flow.
+        """
+        return sum([s._W_req() for s in self.streams])
+
+    def E_balance(self):
+        """
+        Flow energy balance.
+        """
+        return self.Q_in() - self.W_req()
+
+    def E_prop(self):
+        """
+        Energy added to the flow for propulsion.
+        """
+        return sum([s._E_prop() for s in self.streams])
+
+    def efficiency(self):
+        """
+        System efficiency
+        """
+        return self.E_balance()/self.Q_in()
+
+    def prop_efficiency(self):
+        """
+        Stream propulsive efficiency.
+        """
+        return self.E_prop()/self.Q_in()
+
+    """
+    Plots
+    """
     def _plot(self,
               x, y,
               x_scale=None, y_scale=None,
@@ -927,7 +1150,7 @@ class system:
         #         - fig=None, ax=None -> line, scatter
         #             - line, scatter plot onto active figure, axis
         comparison(x=x_system, y=y_system, f=plotters,
-                   legend_loc=(0.875, 0.4),
+                   legend_loc=(0.875, 0.425),
                    show=show,
                    **kwargs)
 
