@@ -24,13 +24,13 @@ and similar architectures are used in well known proprietary tools such as
 
 `Antonio Lopez Rivera, 2021`
 
-### Install
+## Install
 
     pip install huracan
 
-### Examples
+## Examples
 
-#### _[Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)_
+### [Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)
 
 <p align="center">
   <img width=300 src="docs/figures/log_turboprop.png" />
@@ -40,7 +40,7 @@ and similar architectures are used in well known proprietary tools such as
 | --- |
 | ![alt text](docs/figures/pV_turboprop.png "p-V plot") |
 
-#### _[Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)_
+### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)
 
 <p align="center">
   <img width=300 src="docs/figures/log_turbojet.png" />
@@ -50,7 +50,7 @@ and similar architectures are used in well known proprietary tools such as
 | --- |
 | ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
 
-#### _[Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_3s-2s.py)_
+### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_3s-2s.py)
 
 <p align="center">
   <img width=300 src="docs/figures/log_turbofan.png" />
