@@ -98,12 +98,10 @@ class fan(screw):
 
     def __init__(self,
                  eta,
-                 bpr,
                  PI=None,
                  TAU=None):
         """
         :type eta: float
-        :type bpr: float
         :type PI:  float
         :type TAU: float
         """
