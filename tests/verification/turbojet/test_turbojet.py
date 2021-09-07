@@ -1,7 +1,14 @@
+"""
+Huracan
+-------
+Twin-spool, reheated turbojet engine test.
+"""
+
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
 from huracan.components import inlet, compressor, combustion_chamber, turbine, afterburner, nozzle
 
+from tests.utils import verify
 
 mf = 160
 M  = 0
@@ -32,29 +39,41 @@ stream = g-i-c1-c2-cc-t1-t2-ab-n
 
 stream.run()
 
-model_t0 = stream.t0()
-model_p0 = stream.p0()
+"""
+Verification
 
-verification_t0 = [288.,
-                   452.66630032,
-                   711.48187307,
-                   1450,
-                   1227.1163336,
-                   1085.31099956,
-                   1850,
-                   1587.98283262]
-verification_p0 = [93219.,
-                   372876.,
-                   1491504.,
-                   1446758.88,
-                   680119.41922727,
-                   390882.21425195,
-                   379155.74782439,
-                   197805.04920735]
+- Error must stay below 0.1% of the verification value 
+"""
+# Total temperature
+verify(stream['0.il'].t0,    288)               # Inlet
+verify(stream['0.cp1'].t0, 452.66630032)      # Compressor 1
+verify(stream['0.cp2'].t0, 711.48187307)      # Compressor 2
 
-# Compression verification
-for i in range(verification_t0.index(1450)):
-    assert model_t0[i] - verification_t0[i] < 10e-8, (i, model_t0[i], verification_t0[i])
-    assert model_p0[i] - verification_p0[i] < 10e-8, (i, model_p0[i], verification_p0[i])
+# Total pressure
+verify(stream['0.il'].p0,    93219)             # Inlet
+verify(stream['0.cp1'].p0, 372876)           # Compressor 1
+verify(stream['0.cp2'].p0, 1491504)           # Compressor 2
 
-assert stream.v_exit() - 840.3353 < 10e-5, stream.v_exit() - 840.3353
+"""
+Exceptions:
+
+The fuel mass flow method differs from
+that used by the verification model. 
+This causes differences in the models'
+results after the main combustion chamber.
+
+- Error must stay below 5% of the verification value 
+"""
+# Fuel mass flow
+verify(cc.fuel.mf, 3.1921, 0.05)
+
+# Total temperature
+verify(stream['0.tb1'].t0, 1227.1163336,  0.05)    # Turbine 1
+verify(stream['0.tb2'].t0, 1085.31099956, 0.05)    # Turbine 2
+
+# Total pressure
+verify(stream['0.tb1'].p0, 680119.41922727, 0.05)  # Turbine 1
+verify(stream['0.tb2'].p0, 390882.21425195, 0.05)  # Turbine 2
+
+# Exit velocity
+verify(stream.v_exit(), 840.3353)

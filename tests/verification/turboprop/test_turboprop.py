@@ -1,12 +1,14 @@
 """
 Huracan
 -------
-Two-spool turboprop engine.
+Single-spool turboprop engine test.
 """
 
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
 from huracan.components import inlet, prop, compressor, combustion_chamber, turbine, afterburner, nozzle, power_plant
+
+from tests.utils import verify
 
 mf = 35
 M  = 0.5
@@ -33,9 +35,40 @@ stream = g-pr-i-c-cc-t-n
 
 stream.run()
 
-stream.plot_T_p(show=True, color='purple')
-stream.plot_p_V(show=True, color='orange')
+"""
+Verification
 
-print(stream.v_exit())
-print(stream.A_exit())
-print(stream.thrust())
+- Error must stay below 0.1% of the verification value 
+"""
+# Total temperature
+verify(stream['0.il'].t0, 302.56)               # Inlet
+verify(stream['0.cp'].t0, 661.84)               # Compressor
+
+# Total pressure
+verify(stream['0.il'].p0, 120192.99554985)      # Inlet
+verify(stream['0.cp'].p0, 1382219.44882326)     # Compressor
+
+"""
+Exceptions:
+
+The fuel mass flow method differs from
+that used by the verification model. 
+This causes differences in the models'
+results after the main combustion chamber.
+
+- Error must stay below 5% of the verification value 
+"""
+# Fuel mass flow
+verify(cc.fuel.mf, 0.4425, 0.05)
+
+# Total temperature
+verify(stream['0.tb'].t0, 721.35,  0.05)        # Turbine
+verify(stream['0.nz'].t0, 645.8)                # Nozzle
+
+# Total pressure
+verify(stream['0.tb'].p0, 162.37e3, 0.05)       # Turbine
+verify(stream['0.nz'].p0, 101325)               # Nozzle
+
+# Exit velocity
+verify(stream.v_exit(), 417.2)
+
