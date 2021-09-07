@@ -14,13 +14,16 @@ huracan/components/__pycache__/*
 huracan/components/.pytest_cache/*
 
 tests/__pycache__/*
+tests/utils/__pycache__/*
 tests/verification/__pycache__/*
 tests/verification/model_verification/__pycache__/*
 tests/verification/model_verification/resources/__pycache__/*
 tests/verification/model_verification/development/__pycache__/*
 
 tests/.pytest_cache/*
+tests/utils/.pytest_cache/*
 tests/verification/.pytest_cache/*
 tests/verification/model_verification/.pytest_cache/*
 tests/verification/model_verification/resources/.pytest_cache/*
 tests/verification/model_verification/development/.pytest_cache/*
+
