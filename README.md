@@ -11,6 +11,7 @@ modelling package for preliminary analysis and design of airbreathing engines,
 divulgation and educational purposes.
 
 **Capabilities**
+
 At the moment Huracan is capable of modelling engines with an arbitrary number of 
 components connected by an arbitrary number of shafts. It allows for a single 
 combustion chamber per stream and reheating. Multiple-stream systems can be modelled, 
@@ -18,11 +19,13 @@ as well as splitting (such as the bypass flow of a turbofan) and mixing streams 
 as in the nozzle of a mixed exhaust turbofan).
 
 **Inspiration**
+
 The inspiration for the project lies in traditional thermodynamic plant diagrams, 
 and similar architectures are used in well known proprietary tools such as 
 [GasTurb](https://www.gasturb.de/) and [NLR's GSP](https://www.gspteam.com/index.html).
 
 **Documentation**
+
 [The API reference is available here.](https://huracan-docs.github.io/)
 
 `Antonio Lopez Rivera, 2021`
