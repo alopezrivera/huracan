@@ -24,11 +24,35 @@ and similar architectures are used in well known proprietary tools such as
 
 ## Examples
 
-| **[Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)** | **[Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)** | **[Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)** |
-| --- | --- | --- |
-| <p align="top"><img width=300 src="docs/figures/log_turboprop.png" /></p> | <p align="top"><img width=300 src="docs/figures/log_turbojet.png" /></p> | <p align="top"><img width=300 src="docs/figures/log_turbofan.png" /></p> |
-| ![alt text](docs/figures/Tp_turboprop.png "T-p plot") | ![alt text](docs/figures/Tp_turbojet.png "T-p plot") | ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
-| ![alt text](docs/figures/pV_turboprop.png "p-V plot") | ![alt text](docs/figures/pV_turbojet.png "p-V plot") | ![alt text](docs/figures/pV_turbofan.png "p-V plot") |
+### [Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)
+
+<p align="center">
+  <img width=300 src="docs/figures/log_turboprop.png" />
+</p>
+
+| ![alt text](docs/figures/Tp_turboprop.png "T-p plot") |
+| --- |
+| ![alt text](docs/figures/pV_turboprop.png "p-V plot") |
+
+### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)
+
+<p align="center">
+  <img width=300 src="docs/figures/log_turbojet.png" />
+</p>
+
+| ![alt text](docs/figures/Tp_turbojet.png "T-p plot") |
+| --- |
+| ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
+
+### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)
+
+<p align="center">
+  <img width=300 src="docs/figures/log_turbofan.png" />
+</p>
+
+| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
+| --- |
+| ![alt text](docs/figures/pV_turbofan.png "p-V plot") |
 
 ---
 [Back to top](#huracan)
