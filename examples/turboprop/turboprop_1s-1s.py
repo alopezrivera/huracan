@@ -34,8 +34,8 @@ stream = g-pr-i-c-cc-t-n
 stream.run()
 
 stream.plot_T_p(show=True, color='purple')
-stream.plot_p_v(show=True, color='orange')
+stream.plot_p_V(show=True, color='orange')
 
 print(stream.v_exit())
 print(stream.A_exit())
-print(stream.thrust())
+print(stream.total_thrust())
