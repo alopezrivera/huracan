@@ -50,7 +50,7 @@ and similar architectures are used in well known proprietary tools such as
 | --- |
 | ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
 
-### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_3s-2s.py)
+### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)
 
 <p align="center">
   <img width=300 src="docs/figures/log_turbofan.png" />
