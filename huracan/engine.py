@@ -511,7 +511,7 @@ class stream:
         """
         if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
             propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
-            prop_thrust = sum([prop.flow_thrust(self.gas.v_0) for prop in propellers])
+            prop_thrust = sum([prop.thrust(self.gas.v_0) for prop in propellers])
         else:
             prop_thrust = 0
         return prop_thrust
