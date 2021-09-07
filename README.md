@@ -1,61 +1,61 @@
 # Huracan
+---
+
+:construction: :construction: :construction:
+__WARNING! Under active development__
+:construction: :construction: :construction:
+
+Huracan is an open source, 0-dimensional, object-oriented airbreathing engine 
+modelling package for preliminary analysis and design of airbreathing engines, 
+divulgation and educational purposes.
+
+At the moment Huracan is capable of modelling engines with an arbitrary number of 
+components connected by an arbitrary number of shafts. It allows for a single 
+combustion chamber per stream and reheating. Multiple-stream systems can be modelled, 
+as well as splitting (such as the bypass flow of a turbofan) and mixing streams (such 
+as in the nozzle of a mixed exhaust turbofan).
+
+The inspiration for the project lies in traditional thermodynamic plant diagrams, 
+and similar architectures are used in well known proprietary tools such as 
+[GasTurb](https://www.gasturb.de/) and [NLR's GSP](https://www.gspteam.com/index.html).
 
 [The API reference is available here.](https://huracan-docs.github.io/)
 
-:construction: **WARNING! Under active development**
+`Antonio Lopez Rivera, 2021`
 
-## Install
+### Install
 
     pip install huracan
-    
-## Example script
 
-Simple turbojet engine with 2 compressors and 2 turbines in a 2 shaft configuration and no secondary airflows.
-
-    from huracan.engine import shaft
-    from huracan.thermo.fluids import gas, fuel
-    from huracan.components import inlet, compressor, combustion_chamber, turbine, afterburner, nozzle
-    
-    
-    mf = 160
-    M = 0
-    t = 288
-    p = 101325
-    
-    fuel_cc = fuel(LHV=43e6)
-    fuel_ab = fuel(LHV=43e6)
-    
-    g = gas(mf=mf,
-            cp=lambda T: 1150 if T > 600 else 1000,
-            k=lambda T: 1.33 if T > 600 else 1.4,
-            m=M, t_0=t, p_0=p)
-    
-    i  = inlet(PI=0.92)
-    c1 = compressor(eta=0.85, PI=4)
-    c2 = compressor(eta=0.85, PI=4)
-    cc = combustion_chamber(fuel_cc, eta=0.97, t01=1450)
-    t1 = turbine(0.9)
-    t2 = turbine(0.9)
-    ab = afterburner(fuel_ab, eta=0.95, t01=1850)
-    n  = nozzle(0.95)
-    
-    
-    shaft1 = shaft(c1, t2, eta=0.99)
-    shaft2 = shaft(c2, t1, eta=0.99)
-    
-    stream = g-i-c1-c2-cc-t1-t2-ab-n
-    
-    stream.run()
-    
-    # Plot p-v diagram
-    stream.plot_p_v(show=True, color='orange')
-    # Plot T-p diagram
-    stream.plot_T_p(show=True, color='orange')
+##### _[Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)_
 
 <p align="center">
-  <img height=450 src="docs/figures/log.png" />
+  <img width=300 src="docs/figures/log_turboprop.png" />
 </p>
 
-| ![alt text](docs/figures/Tp.png "T-p plot") |
+| ![alt text](docs/figures/Tp_turboprop.png "T-p plot") |
 | --- |
-| ![alt text](docs/figures/pv.png "p-v plot") |
+| ![alt text](docs/figures/pV_turboprop.png "p-V plot") |
+
+##### _[Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)_
+
+<p align="center">
+  <img width=300 src="docs/figures/log_turbojet.png" />
+</p>
+
+| ![alt text](docs/figures/Tp_turbojet.png "T-p plot") |
+| --- |
+| ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
+
+##### _[Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_3s-2s.py)_
+
+<p align="center">
+  <img width=300 src="docs/figures/log_turbofan.png" />
+</p>
+
+| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
+| --- |
+| ![alt text](docs/figures/pV_turbofan.png "p-V plot") |
+
+---
+[Back up](#huracan)
