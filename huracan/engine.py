@@ -528,7 +528,7 @@ class stream:
         """
         return self.fmf()/self.flow_thrust()
 
-    def _Q_in(self):               #TODO: verify and implement efficiency calculations
+    def _Q_in(self):                #TODO: verify efficiency calculations
         """
         Heat provided to the flow.
         """
@@ -778,7 +778,7 @@ class stream:
         """
         return self._system_takeover('sfc')
 
-    def Q_in(self):  # TODO: verify and implement efficiency calculations
+    def Q_in(self):                 # TODO: verify efficiency calculations
         """
         Heat provided to the flow.
         """
@@ -989,7 +989,7 @@ class system:
     def sfc(self):
         return self.fmf()/self.flow_thrust()
 
-    def Q_in(self):  # TODO: verify and implement efficiency calculations
+    def Q_in(self):                 # TODO: verify efficiency calculations
         """
         Heat provided to the flow.
         """
