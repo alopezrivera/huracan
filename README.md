@@ -16,8 +16,6 @@ and similar architectures are used in well known proprietary tools such as
 
 [The API reference is available here.](https://huracan-docs.github.io/)
 
-`Antonio Lopez Rivera, 2021`
-
 ## Install
 
     pip install huracan
