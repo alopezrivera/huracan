@@ -29,7 +29,7 @@ g = gas(mf=mf,
 i  = inlet             (PI=0.98)
 fn = fan               (eta=0.94,  PI=1.54)
 c1 = compressor        (eta=0.991, PI=9.61)
-ic = intercooler       (eta=0.95,  Q_out=60e6)
+ic = intercooler       (eta=0.95,  Q_out=15e6)
 c2 = compressor        (eta=0.92,  PI=3.38)
 cc = combustion_chamber(fuel=fuel, eta=0.985, PI=0.99, t01=1838)
 t1 = turbine           (eta=0.96)
@@ -51,5 +51,7 @@ s1bypass-nf
 
 stream.run()
 
-stream.plot_T_p(show=True, color='purple', legend=True)
+stream.plot_T_S(show=True, color='purple', legend=True)
 stream.plot_p_V(show=True, color='orange', legend=True)
+stream.plot_p_H(show=True, color='purple', legend=True)
+stream.plot_T_p(show=True, color='orange', legend=True)
