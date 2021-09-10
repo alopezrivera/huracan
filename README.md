@@ -6,7 +6,8 @@ divulgation and educational purposes.
 
 At the moment Huracan is capable of modelling engines with an arbitrary number of 
 components connected by an arbitrary number of shafts. It allows for a single 
-combustion chamber per stream and reheating. Multiple-stream systems can be modelled, 
+combustion chamber per stream, reheating, intercooling and the addition of electrical
+system power requirements. Multiple-stream systems can be modelled, 
 as well as splitting (such as the bypass flow of a turbofan) and mixing streams (such 
 as in the nozzle of a mixed exhaust turbofan).
 
