@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+
 from alexandria.shell import print_color
 from alexandria.data_structs.string import join_set_distance
 
