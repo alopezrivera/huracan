@@ -28,27 +28,33 @@ and similar architectures are used in well known proprietary tools such as
 | <p align="left"><img width=625 src="docs/figures/diagram_turboprop.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turboprop.png" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/Tp_turboprop.png "T-p plot") |
+| ![alt text](docs/figures/TS_turboprop.png "T-S plot") |
 | --- |
 | ![alt text](docs/figures/pV_turboprop.png "p-V plot") |
+| ![alt text](docs/figures/Hp_turbofan.png "H-p plot") |
+| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
 
 ### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s.py)
 
 | <p align="left"><img width=625 src="docs/figures/diagram_turbojet.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.png" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/Tp_turbojet.png "T-p plot") |
+| ![alt text](docs/figures/TS_turbojet.png "T-S plot") |
 | --- |
 | ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
+| ![alt text](docs/figures/Hp_turbofan.png "H-p plot") |
+| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
 
 ### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)
 
 | <p align="left"><img width=625 src="docs/figures/diagram_turbofan.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbofan.png" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
+| ![alt text](docs/figures/TS_turbofan.png "T-S plot") |
 | --- |
 | ![alt text](docs/figures/pV_turbofan.png "p-V plot") |
+| ![alt text](docs/figures/Hp_turbofan.png "H-p plot") |
+| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
 
 ---
 [Back to top](#huracan)
