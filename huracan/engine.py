@@ -459,17 +459,14 @@ class stream:
 
         for k in dir(self):
             v = getattr(self, k)
-            print('A')
-            print(k, type(v), isinstance(v, types.MethodType))
             # If the attribute k is:
             #    - a method
             #    - which is not special
             #    - whose name is the name of another method in the stream's sytem
             if isinstance(v, types.MethodType) and not re.match(special, k) and k in dir(self.system):
+                # Create private method
                 setattr(self, '_' + k, v)
-
-                print(getattr(self, '_' + k))
-
+                # Replace public method by takeover
                 setattr(self, k, takeover(self, k))
 
     """
@@ -534,10 +531,10 @@ class stream:
         """
         Nozzle exit area
         """
-        return self.gas.mf*R*self.gas.t0/(self.gas.p0*self._v_exit())
+        return self.gas.mf*R*self.gas.t0/(self.gas.p0*self.v_exit())
 
     """
-    Stream performance analysis
+    Fuel consumption
     """
     def fmf(self):
         """
@@ -549,41 +546,50 @@ class stream:
                 fmf += c.fuel.mf
         return fmf
 
-    def flow_thrust(self):
+    """
+    Thrust and specific fuel consumption
+    """
+    def thrust_flow(self):
         """
         Flow thrust
 
         If the flow is choked, the expansion of the gas contributes to the thrust of the flow.
         """
         if self.choked:
-            return self.gas.mf * (self._v_exit() - self.gas.v_0) + self._A_exit() * (
+            return self.gas.mf * (self.v_exit() - self.gas.v_0) + self.A_exit() * (
                         self.gas.p0 - self.gas.p_0)
         else:
-            return self.gas.mf * (self._v_exit() - self.gas.v_0)
+            return self.gas.mf * (self.v_exit() - self.gas.v_0)
 
-    def prop_thrust(self):
+    def thrust_prop(self):
         """
         Propeller/propfan thrust
         """
         if any([c.__class__.__name__ in ['prop', 'propfan'] for c in self.components]):
             propellers = [c for c in self.components if c.__class__.__name__ in ['prop', 'propfan']]
-            prop_thrust = sum([prop.thrust(self.gas.v_0) for prop in propellers])
+            thrust_prop = sum([prop.thrust(self.gas.v_0) for prop in propellers])
         else:
-            prop_thrust = 0
-        return prop_thrust
+            thrust_prop = 0
+        return thrust_prop
 
-    def total_thrust(self):
+    def thrust_total(self):
         """
         Flow thrust plus propeller/propfan thrust
         """
-        return self._flow_thrust() + self._prop_thrust()
+        return self.thrust_flow() + self.thrust_prop()
 
     def sfc(self):
         """
         Specific fuel consumption
         """
-        return self.fmf()/self.flow_thrust()
+        if hasattr(self, 'system'):
+            return self._fmf()/self._thrust_flow()
+        else:
+            return self.fmf()/self.thrust_flow()
 
+    """
+    Heat and work
+    """
     def Q_in(self):                #TODO: verify efficiency calculations
         """
         Heat provided to the flow.
@@ -607,29 +613,47 @@ class stream:
                 w_required += c.w
         return w_required
 
-    def E_balance(self):
+    """
+    Power
+    """
+    def power_jet(self):
         """
-        Flow energy balance.
+        Stream jet power.
         """
-        return self._Q_in() - self._W_req()
+        return 1/2*(self.gas.mf*self.v_exit()**2 - (self.gas.mf - self.fmf())*self.gas.v_0**2)
 
-    def E_prop(self):
+    def power_available(self):
         """
-        Energy added to the flow for propulsion.
+        Stream available power.
         """
-        return self._v_exit()**2/2
+        if hasattr(self, 'system'):
+            return self._efficiency_prop()*self._power_jet()
+        else:
+            return self.efficiency_prop()*self.power_jet()
 
-    def efficiency(self):
+    """
+    Efficiencies
+    """
+    def efficiency_thermal(self):
         """
-        Engine efficiency
+        Stream thermal efficiency
         """
-        return self._E_balance()/self._Q_in()
+        if hasattr(self, 'system'):
+            return self._power_jet()/self._Q_in()
+        else:
+            return self.power_jet()/self.Q_in()
 
-    def prop_efficiency(self):
+    def efficiency_prop(self):
         """
         Stream propulsive efficiency.
         """
-        return self._E_prop()/self._Q_in()
+        return 2/(1+self.v_exit()/self.gas.v_0)
+
+    def efficiency_total(self):
+        if hasattr(self, 'system'):
+            return self._power_available()/self._Q_in()
+        else:
+            return self.power_available()/self.Q_in()
 
     """
     Plots
@@ -640,9 +664,7 @@ class stream:
                  color=colorscheme_one()[0],
                  **kwargs):
         """
-        Plot
-        - Total pressure
-        - Total temperature
+        Temperature-Pressure system plot.
         """
 
         figure((9, 5))
@@ -666,9 +688,7 @@ class stream:
                  color=colorscheme_one()[0],
                  **kwargs):
         """
-        Plot
-        - Total specific volume
-        - Total pressure
+        Pressure-Volume stream plot.
         """
 
         figure((9, 5))
@@ -692,9 +712,7 @@ class stream:
                  color=colorscheme_one()[0],
                  **kwargs):
         """
-        Plot
-        - Specific entropy
-        - Total temperature
+        Temperature-Entropy stream plot.
         """
 
         figure((9, 5))
@@ -718,9 +736,7 @@ class stream:
                  color=colorscheme_one()[0],
                  **kwargs):
         """
-        Plot
-        - Specific entropy
-        - Total temperature
+        Pressure-Enthalpy stream plot.
         """
 
         figure((9, 5))
@@ -898,83 +914,91 @@ class system:
         return parents
 
     """
-    Stream outlet flow characteristics
-    """
-    def v_exit(self):
-        """
-        Flow exit velocity
-
-        Assumptions:
-        - If the flow is not choked:
-             The thermal energy lost by the gas as it leaves the nozzle
-             is transformed into kinetic energy without losses.
-        - If the flow is choked:
-             The exit velocity is the velocity of sound before the nozzle
-             exit.
-        """
-        v = [s._v_exit() for s in self.streams if s not in self.parents()]
-        return v[0] if len(v) == 1 else v
-
-    def A_exit(self):
-        """
-        Nozzle exit area
-        """
-        a = [s._A_exit() for s in self.streams if 'nozzle' in [c.__class__.__name__ for c in s.components]]
-        return a[0] if len(a) == 1 else a
-
-    """
-    System performance analysis
+    Fuel consumption
     """
     def fmf(self):
+        """
+        System fuel mass flow.
+        """
         return sum([s._fmf() for s in self.streams])
 
-    def flow_thrust(self):
-        return sum([s._flow_thrust() for s in self.streams if s not in self.parents()])
+    """
+    Thrust and specific fuel consumption
+    """
+    def thrust_flow(self):
+        """
+        System flow thrust.
+        """
+        return sum([s._thrust_flow() for s in self.streams if s not in self.parents()])
 
-    def prop_thrust(self):
-        return sum([s._prop_thrust() for s in self.streams])
+    def thrust_prop(self):
+        """
+        System propeller thrust
+        """
+        return sum([s._thrust_prop() for s in self.streams])
 
-    def total_thrust(self):
-        return self.flow_thrust() + self.prop_thrust()
+    def thrust_total(self):
+        """
+        System total thrust.
+        """
+        return self.thrust_flow() + self.thrust_prop()
 
     def sfc(self):
-        return self.fmf()/self.flow_thrust()
+        """
+        System specific fuel consumption.
+        """
+        return self.fmf()/self.thrust_flow()
 
+    """
+    Heat and work
+    """
     def Q_in(self):                 # TODO: verify efficiency calculations
         """
         Heat provided to the flow.
         """
-        return sum([s.Q_in() for s in self.streams])
+        return sum([s._Q_in() for s in self.streams])
 
     def W_req(self):
         """
         Work required from the flow.
         """
-        return sum([s.W_req() for s in self.streams])
+        return sum([s._W_req() for s in self.streams])
 
-    def E_balance(self):
+    """
+    Power
+    """
+    def power_jet(self):
         """
-        Flow energy balance.
+        Stream jet power.
         """
-        return self.Q_in() - self.W_req()
+        return sum([s._power_jet() for s in self.streams if s not in self.parents()])
 
-    def E_prop(self):
+    def power_available(self):
         """
-        Energy added to the flow for propulsion.
+        Stream available power.
         """
-        return sum([s.E_prop() for s in self.streams])
+        return sum([s._power_available() for s in self.streams if s not in self.parents()])
 
-    def efficiency(self):
+    """
+    Efficiencies
+    """
+    def efficiency_prop(self):
         """
-        System efficiency
+        System propulsive efficiency.
         """
-        return self.E_balance()/self.Q_in()
+        return self.power_available()/self.power_jet()
 
-    def prop_efficiency(self):
+    def efficiency_thermal(self):
         """
-        Stream propulsive efficiency.
+        System thermal efficiency.
         """
-        return self.E_prop()/self.Q_in()
+        return self.power_jet()/self.Q_in()
+
+    def efficiency_total(self):
+        """
+        System total efficiency.
+        """
+        return self.power_available()/self.Q_in()
 
     """
     Plots
@@ -987,6 +1011,9 @@ class system:
              plot_label=None,                  # When called from a _system_takeover the plot_label and color
              color=colorscheme_one()[0],       # arguments are passed to the function, but disregarded.
              **kwargs):
+        """
+        General system plot.
+        """
         """
         System plot
         -----------
@@ -1091,6 +1118,9 @@ class system:
                  color=colorscheme_one()[0],
                  **kwargs
                  ):
+        """
+        Temperature-Pressure system plot.
+        """
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
@@ -1104,6 +1134,9 @@ class system:
                  plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
+        """
+        Pressure-Volume system plot.
+        """
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
@@ -1117,6 +1150,9 @@ class system:
                  plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
+        """
+        Temperature-Entropy system plot.
+        """
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
@@ -1130,6 +1166,9 @@ class system:
                  plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
+        """
+        Pressure-Enthalpy system plot.
+        """
         args = locals()
         args.pop('self', None)
         args.pop('kwargs', None)
