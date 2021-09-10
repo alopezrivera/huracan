@@ -89,20 +89,20 @@ results after the main combustion chamber.
 error = 0.05
 
 # Fuel mass flow
-verify(cc.fuel.mf, 3.377,             error, log=True, name='e(fmf)')
+verify(cc.fuel.mf,              3.377,     error, log=True, name='e(fmf)')
 
 # Total temperature
-verify(stream['1.s.tb1'].t0, 1593,    error, log=True, name='e(tb1.t0)')       # Turbine 1
-verify(stream['1.s.tb2'].t0, 1334,    error, log=True, name='e(tb2.t0)')       # Turbine 2
-verify(stream['1.s.tb3'].t0, 967,     error, log=True, name='e(tb3.t0)')       # Turbine 3
+verify(stream['1.s.tb1'].t0,    1593,      error, log=True, name='e(tb1.t0)')       # Turbine 1
+verify(stream['1.s.tb2'].t0,    1334,      error, log=True, name='e(tb2.t0)')       # Turbine 2
+verify(stream['1.s.tb3'].t0,    967,       error, log=True, name='e(tb3.t0)')       # Turbine 3
 
 # Total pressure
-verify(stream['1.s.tb1'].p0, 2666269, error, log=True, name='e(tb1.p0)')       # Turbine 1
-verify(stream['1.s.tb2'].p0, 1267264, error, log=True, name='e(tb2.p0)')       # Turbine 2
-verify(stream['1.s.tb3'].p0, 330414,  error, log=True, name='e(tb3.p0)')       # Turbine 3
+verify(stream['1.s.tb1'].p0,    2666269,   error, log=True, name='e(tb1.p0)')       # Turbine 1
+verify(stream['1.s.tb2'].p0,    1267264,   error, log=True, name='e(tb2.p0)')       # Turbine 2
+verify(stream['1.s.tb3'].p0,    330414,    error, log=True, name='e(tb3.p0)')       # Turbine 3
 
 # Thrust
-verify(s1core._flow_thrust(), 85703,  0.1,   log=True, name='e(T_core)')       # Thrust
+verify(s1core._thrust_flow(),   85703,     0.1,   log=True, name='e(T_core)')       # Thrust
 
 # Efficiency
-verify(stream.sfc(), 11.36e-6,        0.1,   log=True, name='e(SFC)')          # Specific fuel consumption
+verify(stream.sfc(),            11.36e-6,  0.1,   log=True, name='e(SFC)')          # Specific fuel consumption
