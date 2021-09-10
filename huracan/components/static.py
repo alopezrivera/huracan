@@ -29,7 +29,7 @@ class intake(component):
         return gas.diffusion(eta=self.eta, PI=self.PI, TAU=self.TAU)
 
 
-class inlet(component):
+class inlet(intake):
     """
     Inlet
     -----
@@ -45,14 +45,11 @@ class inlet(component):
         :type PI:  float
         :type TAU: float
         """
-        self.eta = eta
-        self.PI  = PI
-        self.TAU = TAU
+        super().__init__(eta=eta,
+                         PI=PI,
+                         TAU=TAU)
 
         assert not isinstance(eta, type(None)) or not isinstance(PI, type(None)) or not isinstance(TAU, type(None))
-
-    def tf(self, gas):
-        return gas.diffusion(eta=self.eta, PI=self.PI, TAU=self.TAU)
 
 
 class nozzle(component):
