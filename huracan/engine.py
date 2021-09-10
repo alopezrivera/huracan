@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+"""
+Huracan engine elements
+-----------------------
+"""
+
 import numpy as np
 from copy import deepcopy
 
@@ -284,8 +292,11 @@ class stream:
                  'compressor':         'cp',
                  'combustion_chamber': 'cc',
                  'turbine':            'tb',
+                 'nozzle':             'nz',
+
+                 'intercooler':        'ic',
+                 'recuperator':        'rc',
                  'afterburner':        'ab',
-                 'nozzle':             'nz'
                  }
 
         code = codes[c.__class__.__name__] + self._n_instances(c)

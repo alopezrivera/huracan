@@ -1,8 +1,16 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+"""
+Huracan fluid models
+--------------------
+"""
+
 from copy import deepcopy
 
 from huracan.constants import R
 from huracan.engine import stream, component
-from huracan.thermo.processes import absolute, diffusion, compression, combustion, expansion
+from huracan.thermo.processes import absolute, diffusion, compression, heat_exchange, expansion
 
 
 class fluid:
@@ -299,34 +307,40 @@ class gas(fluid):
 
         return p
 
-    def heat_addition(self,
+    def heat_exchange(self,
                       eta,
                       cp,
-                      fuel_mf,
-                      fuel_LHV,
+                      Q_ex,
                       PI=1):
         """
-        Constant pressure heat addition
-        -------------------------------
+        Isobaric heat exchange
+        ----------------------
 
         Assumptions:
         - Perfect heat addition
-        - Constant pressure
 
-        :param eta:      Isentropic efficiency
-        :param cp:       Specific heat of gas during heat addition
-        :param fuel_mf:  Fuel mass flow
-        :param fuel_LHV: Fuel Lower Heating Value (heat of combustion)
+        The pressure ratio is assumed to be constant,
+        however a pressure ratio different than 1 can
+        be input to the function in case the process
+        cannot be assumed to be isobaric.
+
+        :param eta:  Isentropic efficiency
+        :param cp:   Specific heat of gas during heat addition
+        :param Q_ex: Heat received by the gas in the heat exchange
+
+        :type eta:   float
+        :type cp:    float
+        :type Q_ex:  float
+        :type PI:    float
         """
 
-        p = combustion(mf       = self.mf,
-                       cp       = cp,
-                       t00      = self.t0,
-                       p00      = self.p0,
-                       fuel_mf  = fuel_mf,
-                       fuel_LHV = fuel_LHV,
-                       eta      = eta,
-                       PI       = PI)
+        p = heat_exchange(mf       = self.mf,
+                          cp       = cp,
+                          t00      = self.t0,
+                          p00      = self.p0,
+                          Q_ex     = Q_ex,
+                          eta      = eta,
+                          PI       = PI)
 
         self.t0 = p.t01
         self.p0 = p.p01

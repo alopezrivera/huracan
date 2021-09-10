@@ -1,17 +1,25 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+"""
+System power sinks
+------------------
+"""
+
 from huracan.engine import component
 
 
-class power_plant(component):
+class electrical_system(component):
     """
-    Aircraft electrical power plant
-    -------------------------------
+    Aircraft electrical system
+    --------------------------
     """
     def __init__(self,
                  w,
                  eta_g=1,
                  eta_c=1):
         """
-        :param w:     [W] Power required by the electrical power plant.
+        :param w:     [W] Power required by the electrical system.
         :param eta_g: [-] Efficiency of the electrical generator attached
                           to the turbine.
         :param eta_c: [-] Efficiency of the electrical power distribution

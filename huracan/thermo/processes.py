@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+"""
+Huracan thermodynamic process functions
+---------------------------------------
+"""
+
 from huracan.utils import setattr_namespace
 
 
@@ -215,6 +223,42 @@ def expansion(mf, cp, k, t00, p00,
     return p
 
 
+def heat_exchange(mf, cp,
+                  t00, p00,
+                  Q_ex,
+                  eta,
+                  PI=1):
+    """
+    Constant pressure heat addition.
+    - A pressure ratio PI may be specified if required.
+
+    :param mf:       [kg/s] Gas mass flow
+    :param cp:       [-]    Constant pressure specific heat
+    :param t00:      [K]    Initial total temperature
+    :param p00:      [Pa]   Initial total pressure
+    :param Q_ex:     [K]    Heat received by the gas in the heat exchange
+    :param eta:      [-]    Isentropic efficiency
+
+    :type mf:        float
+    :type fuel_mf:   float
+    :type fuel_LHV:  float
+    :type t00:       float
+    :type p00:       float
+    :type eta:       float
+    """
+
+    p = process()
+
+    dt = eta*Q_ex/(mf*cp)
+
+    t01 = t00 + dt
+    p01 = p00*PI
+
+    setattr_namespace(p, locals())
+
+    return p
+
+
 def combustion(mf, cp,
                t00, p00,
                fuel_mf, fuel_LHV,
@@ -240,13 +284,12 @@ def combustion(mf, cp,
     :type eta:       float
     """
 
-    p = process()
+    Q_in = (fuel_mf*fuel_LHV)
 
-    dt = eta*(fuel_mf*fuel_LHV)/(mf*cp)
+    return heat_exchange(mf=mf, cp=cp,
+                         t00=t00, p00=p00,
+                         Q_ex=Q_in,
+                         eta=eta,
+                         PI=PI
+                         )
 
-    t01 = t00 + dt
-    p01 = p00*PI
-
-    setattr_namespace(p, locals())
-
-    return p

@@ -1,7 +1,15 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
+"""
+Combustion power plants
+-----------------------
+"""
+
 from copy import deepcopy
 
 from huracan.engine import component
-from huracan.components import turbine
+from huracan.components.power import plant
 
 
 class combustor(component):
@@ -64,16 +72,15 @@ class combustor(component):
 
         self.Q = self.fuel.mf*self.eta*self.fuel.LHV      # Heat added to the flow
 
-        approx_process_t = deepcopy(gas).heat_addition(eta=self.eta,
+        approx_process_t = deepcopy(gas).heat_exchange(eta=self.eta,
+                                                       PI=self.PI,
                                                        cp=gas.cp(gas.t0),
-                                                       fuel_mf=self.fuel.mf,
-                                                       fuel_LHV=self.fuel.LHV).t01
+                                                       Q_ex=self.Q).t01
 
-        return gas.heat_addition(eta=self.eta,
+        return gas.heat_exchange(eta=self.eta,
                                  PI=self.PI,
                                  cp=gas.cp(approx_process_t),
-                                 fuel_mf=self.fuel.mf,
-                                 fuel_LHV=self.fuel.LHV)
+                                 Q_ex=self.Q)
 
     def mf_dt(self, dt, gas):
         """
@@ -83,7 +90,7 @@ class combustor(component):
         return dt*gas.mf*gas_cp/(self.eta*self.fuel.LHV - dt*gas_cp)
 
 
-class combustion_chamber(combustor):
+class combustion_chamber(plant, combustor):
     """
     Combustion chamber
     ------------------
@@ -162,31 +169,6 @@ class combustion_chamber(combustor):
         Fuel mass flow from heat addition required.
         """
         return qr/(self.eta*self.fuel.LHV)
-
-    def Q_min(self, downstream):
-        """
-        Obtain the heat required by all downstream turbines.
-
-        Assumptions:
-        - A single combustion chamber is used to power all
-          downstream turbines, without secondary combustion
-          chambers in any of the affluent streams.
-          If this is the case, the combustion chambers will
-          provide the heat required by each of their common
-          turbines (and so twice the amount needed).
-          For now, it is wise to ensure any secondary combustion
-          chambers do not have shared turbines with the main one.
-
-        :type downstream: list of stream
-
-        :return: Heat required by all downstream turbines.
-        """
-        Qr = []
-        for stream in downstream:
-            for c in stream.components:
-                if isinstance(c, turbine):
-                    Qr.append(c.w_r())
-        return sum(Qr)
 
 
 class afterburner(combustor):
