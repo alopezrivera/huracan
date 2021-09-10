@@ -7,23 +7,19 @@ model_verification/.idea/*
 __pycache__/*
 
 huracan/__pycache__/*
-huracan/.pytest_cache/*
 huracan/thermo/__pycache__/*
-huracan/thermo/.pytest_cache/*
 huracan/components/__pycache__/*
+huracan/components/power/__pycache__/*
+
+huracan/.pytest_cache/*
+huracan/thermo/.pytest_cache/*
 huracan/components/.pytest_cache/*
+huracan/components/power/.pytest_cache/*
 
 tests/__pycache__/*
 tests/utils/__pycache__/*
 tests/verification/__pycache__/*
-tests/verification/model_verification/__pycache__/*
-tests/verification/model_verification/resources/__pycache__/*
-tests/verification/model_verification/development/__pycache__/*
 
 tests/.pytest_cache/*
 tests/utils/.pytest_cache/*
 tests/verification/.pytest_cache/*
-tests/verification/model_verification/.pytest_cache/*
-tests/verification/model_verification/resources/.pytest_cache/*
-tests/verification/model_verification/development/.pytest_cache/*
-
