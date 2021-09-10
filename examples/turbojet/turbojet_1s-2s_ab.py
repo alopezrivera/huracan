@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
 """
 Huracan
 -------
@@ -7,7 +10,7 @@ Twin-spool, reheated turbojet engine with an electrical power plant.
 
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
-from huracan.components import inlet, compressor, combustion_chamber, turbine, afterburner, nozzle, power_plant
+from huracan.components import inlet, compressor, combustion_chamber, turbine, afterburner, nozzle, electrical_system
 
 mf = 160
 M  = 0
@@ -31,10 +34,10 @@ t2 = turbine           (eta=0.9)
 ab = afterburner       (fuel=fuel_ab, eta=0.95, t01=1850)
 n  = nozzle            (eta=0.95)
 
-p  = power_plant(w=970000, eta_g=0.7, eta_c=0.98)
+elctr  = electrical_system(w=970000, eta_g=0.7, eta_c=0.98)
 
-shaft1 = shaft(c1, t2,    eta=0.99)
-shaft2 = shaft(c2, t1, p, eta=0.99)
+shaft1 = shaft(c1, t2,        eta=0.99)
+shaft2 = shaft(c2, t1, elctr, eta=0.99)
 
 stream = g-i-c1-c2-cc-t1-t2-ab-n
 

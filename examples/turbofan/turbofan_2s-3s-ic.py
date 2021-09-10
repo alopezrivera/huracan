@@ -10,7 +10,7 @@ Three-spool turbofan engine.
 
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
-from huracan.components import inlet, fan, compressor, combustion_chamber, turbine, nozzle
+from huracan.components import inlet, fan, compressor, intercooler, combustion_chamber, turbine, nozzle
 
 mf = 1440
 M  = 0.4
@@ -29,6 +29,7 @@ g = gas(mf=mf,
 i  = inlet             (PI=0.98)
 fn = fan               (eta=0.94,  PI=1.54)
 c1 = compressor        (eta=0.991, PI=9.61)
+ic = intercooler       (eta=0.95,  Q_out=60e6)
 c2 = compressor        (eta=0.92,  PI=3.38)
 cc = combustion_chamber(fuel=fuel, eta=0.985, PI=0.99, t01=1838)
 t1 = turbine           (eta=0.96)
@@ -45,7 +46,7 @@ stream = g-i-fn
 
 s1core, s1bypass = stream*(bpr/(bpr+1))
 
-s1core-c1-c2-cc-t1-t2-t3-nc
+s1core-c1-ic-c2-cc-t1-t2-t3-nc
 s1bypass-nf
 
 stream.run()
