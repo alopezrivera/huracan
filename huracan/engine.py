@@ -658,28 +658,28 @@ class stream:
     """
     Plots
     """
-    def plot_T_p(self,
-                 show=False,
-                 plot_label=None,
-                 color=colorscheme_one()[0],
-                 **kwargs):
+    def plot_T_S(self,
+             show=False,
+             plot_label=None,
+             color=colorscheme_one()[0],
+             **kwargs):
         """
-        Temperature-Pressure system plot.
+        Temperature-Entropy stream plot.
         """
 
         figure((9, 5))
 
-        defaults = {'x_label': 'p$_0$ [kPa]',
-                    'y_label': 'T$_0$ [K]'}
+        defaults = {'x_label': '$\Delta$S [kJ/K/n]',
+                    'y_label': 'T$_0$ [K]',}
 
         further_custom = {**defaults, **kwargs}
 
-        self.plot_cycle_graph(self.p0()/1000, self.t0(),
+        self.plot_cycle_graph(self.S()/1000, self.t0(),
                               color=color,
                               plot_label=plot_label,
                               show=show,
                               # Further customization
-                              x_tick_ndecimals=2,
+                              y_tick_ndecimals=2,
                               **further_custom)
 
     def plot_p_V(self,
@@ -706,30 +706,6 @@ class stream:
                               y_tick_ndecimals=2,
                               **further_custom)
 
-    def plot_T_S(self,
-                 show=False,
-                 plot_label=None,
-                 color=colorscheme_one()[0],
-                 **kwargs):
-        """
-        Temperature-Entropy stream plot.
-        """
-
-        figure((9, 5))
-
-        defaults = {'x_label': 'S [J/K/n]',
-                    'y_label': 'T$_0$ [K]',}
-
-        further_custom = {**defaults, **kwargs}
-
-        self.plot_cycle_graph(self.S(), self.t0() / 1000,
-                              color=color,
-                              plot_label=plot_label,
-                              show=show,
-                              # Further customization
-                              y_tick_ndecimals=2,
-                              **further_custom)
-
     def plot_p_H(self,
                  show=False,
                  plot_label=None,
@@ -742,16 +718,40 @@ class stream:
         figure((9, 5))
 
         defaults = {'x_label': 'p$_0$ [kPa]',
-                    'y_label': 'H$_0$ [J]',}
+                    'y_label': 'H$_0$ [kJ]',}
 
         further_custom = {**defaults, **kwargs}
 
-        self.plot_cycle_graph(self.p0(), self.H() / 1000,
+        self.plot_cycle_graph(self.p0()/1000, self.H()/1000,
                               color=color,
                               plot_label=plot_label,
                               show=show,
                               # Further customization
                               y_tick_ndecimals=2,
+                              **further_custom)
+
+    def plot_T_p(self,
+             show=False,
+             plot_label=None,
+             color=colorscheme_one()[0],
+             **kwargs):
+        """
+        Temperature-Pressure system plot.
+        """
+
+        figure((9, 5))
+
+        defaults = {'x_label': 'p$_0$ [kPa]',
+                    'y_label': 'T$_0$ [K]'}
+
+        further_custom = {**defaults, **kwargs}
+
+        self.plot_cycle_graph(self.p0()/1000, self.t0(),
+                              color=color,
+                              plot_label=plot_label,
+                              show=show,
+                              # Further customization
+                              x_tick_ndecimals=2,
                               **further_custom)
 
     def plot_cycle_graph(self,
@@ -1044,11 +1044,13 @@ class system:
         x_system   = []
         y_system   = []
 
+        defaults   = {'legend': True}
+
         scales     = {'t0': 1,
                       'p0': 1/1000,
                       'V':  1,
-                      'S':  1,
-                      'H':  1}
+                      'S':  1/1000,
+                      'H':  1/1000}
         x_scale    = scales[x] if isinstance(x_scale, type(None)) else x_scale
         y_scale    = scales[y] if isinstance(y_scale, type(None)) else y_scale
 
@@ -1059,12 +1061,13 @@ class system:
         for stream in self.streams:
 
             # Plot defaults
-            defaults = {'plot_label': f'{".".join([str(c) for c in stream.stream_id])}',
-                        'x_label': x_label,
-                        'y_label': y_label,
-                        'color': colorscheme_one()[self.streams.index(stream)],
-                        'zorder': 10-self.streams.index(stream)
-                        }
+            subplot_defaults = {
+                'plot_label': f'{".".join([str(c) for c in stream.stream_id])}',
+                'x_label': x_label,
+                'y_label': y_label,
+                'color': colorscheme_one()[self.streams.index(stream)],
+                'zorder': 10-self.streams.index(stream),
+            }
 
             def gen_plotter(**defaults):
                 """
@@ -1077,7 +1080,7 @@ class system:
             x_stream = getattr(stream, x)()*x_scale
             y_stream = getattr(stream, y)()*y_scale
 
-            plotters.append(gen_plotter(**defaults))
+            plotters.append(gen_plotter(**subplot_defaults))
             x_system.append(x_stream)
             y_system.append(y_stream)
 
@@ -1092,7 +1095,7 @@ class system:
                     if len(stream.components) > 0:
                         x_system.append(np.array([p_x, x_stream[0]]))
                         y_system.append(np.array([p_y, y_stream[0]]))
-                        plotters.append(gen_plotter(color=defaults['color'], x_label=None, y_label=None))
+                        plotters.append(gen_plotter(color=subplot_defaults['color'], x_label=None, y_label=None))
 
         # 2.2 Remove streams with no stages
         mask_x = np.array([a.size != 0 for a in x_system])
@@ -1110,7 +1113,7 @@ class system:
         comparison(x=x_system, y=y_system, f=plotters,
                    legend_loc=(0.875, 0.425),
                    show=show,
-                   **kwargs)
+                   **{**kwargs, **defaults})
 
     def plot_T_p(self,
                  show=False,
@@ -1157,7 +1160,7 @@ class system:
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='S',  x_label='S [J/K]',
+        self.plot(x='S',  x_label='$\Delta$S [kJ/K]',
                   y='t0', y_label='T$_0$ [K]',
                   **{**args, **kwargs})
 
@@ -1173,6 +1176,6 @@ class system:
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='p0',  x_label='p$_0$ [kPa]',
-                  y='H', y_label='H$_0$ [J]',
+        self.plot(x='p0', x_label='p$_0$ [kPa]',
+                  y='H',  y_label='H$_0$ [kJ]',
                   **{**args, **kwargs})

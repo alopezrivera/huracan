@@ -92,6 +92,9 @@ class gas(fluid):
         self.p_0 = p_0
 
         self.absolute()
+        
+        # Set the gas' initial entropy as 0
+        self.S = 0
 
     def state(self):
         """
@@ -100,9 +103,9 @@ class gas(fluid):
         - S - Specific entropy
         - H - Specific enthalpy
         """
-        self.V = self.t0*R/self.p0
-        self.S = 1                          #TODO: implement
-        self.H = 1                          #TODO: implement
+        self.V  =  self.t0*R/self.p0
+        self.E  =  self.cp(self.t0)/self.k(self.t0)*self.t0
+        self.H  =  self.E + self.p0*self.V
 
     def __add__(self, other):
         """
@@ -344,6 +347,8 @@ class gas(fluid):
 
         self.t0 = p.t01
         self.p0 = p.p01
+
+        self.S  += Q_ex/self.t0
 
         self.state()
 
