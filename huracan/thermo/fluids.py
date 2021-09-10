@@ -92,7 +92,7 @@ class gas(fluid):
         self.p_0 = p_0
 
         self.absolute()
-        
+
         # Set the gas' initial entropy as 0
         self.S = 0
 
