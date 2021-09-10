@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="huracan",
-    version="0.0.a2",
+    version="0.0.1",
     author="Antonio Lopez Rivera",
     author_email="antonlopezr99@gmail.com",
     description="Open source, 0-dimensional, object-oriented airbreathing engine modelling package for preliminary analysis and design of airbreathing engines, divulgation and educational purposes.",
@@ -14,8 +14,9 @@ setuptools.setup(
     url="https://github.com/alopezrivera/huracan",
     packages=setuptools.find_packages(),
     install_requires=[
-        "Python-Alexandria",
-        "mpl_plotter"
+        "numpy>=1.21.2",
+        "Python-Alexandria>=2.0.0",
+        "mpl_plotter>=4.0.2"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
