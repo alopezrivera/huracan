@@ -24,3 +24,8 @@ In the diagram below can be seen how Huracan models an engine. Fundamentally:
 ---
 
 .. include:: ../docs/diagrams/turbofan_flow_diagram.svg
+
+## Component inheritance diagram
+---
+
+.. include:: ../docs/diagrams/inheritance_diagram.svg
