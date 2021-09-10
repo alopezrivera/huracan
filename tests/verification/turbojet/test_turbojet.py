@@ -67,16 +67,19 @@ results after the main combustion chamber.
 
 - Error must stay below 5% of the verification value 
 """
+
+error = 0.05
+
 # Fuel mass flow
-verify(cc.fuel.mf, 3.1921, 0.05)
+verify(cc.fuel.mf, 3.1921,                  error, log=True, name='e(fmf)')
 
 # Total temperature
-verify(stream['0.tb1'].t0, 1227.1163336,  0.05)    # Turbine 1
-verify(stream['0.tb2'].t0, 1085.31099956, 0.05)    # Turbine 2
+verify(stream['0.tb1'].t0, 1227.1163336,    error, log=True, name='e(tb1.t0)')  # Turbine 1
+verify(stream['0.tb2'].t0, 1085.31099956,   error, log=True, name='e(tb2.t0)')  # Turbine 2
 
 # Total pressure
-verify(stream['0.tb1'].p0, 680119.41922727, 0.05)  # Turbine 1
-verify(stream['0.tb2'].p0, 390882.21425195, 0.05)  # Turbine 2
+verify(stream['0.tb1'].p0, 680119.41922727, error, log=True, name='e(tb1.p0)')  # Turbine 1
+verify(stream['0.tb2'].p0, 390882.21425195, error, log=True, name='e(tb2.p0)')  # Turbine 2
 
 # Exit velocity
-verify(stream.v_exit(), 840.3353)
+verify(stream.v_exit(), 840.3353,           error, log=True, name='e(v_exit)')
