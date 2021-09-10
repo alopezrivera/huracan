@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
+# SPDX-License-Identifier: MPL-2.0
+
 """
 Huracan
 -------
@@ -6,7 +9,7 @@ Three-spool turbofan engine test.
 
 from huracan.engine import shaft
 from huracan.thermo.fluids import gas, fuel
-from huracan.components import inlet, fan, compressor, combustion_chamber, turbine, afterburner, nozzle, power_plant
+from huracan.components import inlet, fan, compressor, combustion_chamber, turbine, nozzle
 
 from tests.utils import verify
 
