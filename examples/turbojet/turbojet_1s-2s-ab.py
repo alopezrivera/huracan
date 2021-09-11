@@ -4,7 +4,6 @@
 """
 Huracan
 -------
-
 Twin-spool, reheated turbojet engine with an electrical power plant.
 """
 

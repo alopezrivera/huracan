@@ -4,7 +4,6 @@
 """
 Huracan
 -------
-
 Three-spool turbofan engine.
 """
 

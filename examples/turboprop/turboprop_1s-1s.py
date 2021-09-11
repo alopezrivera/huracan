@@ -4,7 +4,6 @@
 """
 Huracan
 -------
-
 Two-spool turboprop engine.
 """
 
