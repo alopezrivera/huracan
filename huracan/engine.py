@@ -647,7 +647,7 @@ class stream:
         """
         Stream propulsive efficiency.
         """
-        return 2/(1+self.v_exit()/self.gas.v_0)
+        return 2/(1+self.v_exit()/self.gas.v_0) if self.gas.v_0 > 0 else 0
 
     def efficiency_total(self):
         if hasattr(self, 'system'):
