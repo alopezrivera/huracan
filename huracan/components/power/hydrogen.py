@@ -4,8 +4,6 @@
 """
 Hydrogen power plants
 ---------------------
-
-
 """
 
 from huracan.engine import component

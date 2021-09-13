@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
 # SPDX-License-Identifier: vGPL-3.0-only
 
+"""
+Static components
+-----------------
+"""
 
 from huracan.engine import component
 
