@@ -50,6 +50,72 @@ class component:
             setattr(self, sv, getattr(gas, sv))
 
 
+class set:
+    """
+    Component set class
+    """
+    def __sub__(self, other):
+        """
+        Set concatenation operator: <set> - <component/set>
+        """
+        if isinstance(other, component):
+            self.add_component(other)
+            return self
+        if isinstance(other, set):
+            return self.add_set(other)
+
+    """
+    System takeover
+    """
+    def superset_takeover(self):
+        """
+        Superset takeover
+        ---------------
+
+        When a set (a stream) is integrated in a superset
+        (a system), all set methods with a homonimous
+        superset method are renamed as protected
+        instance attributes, and their original names are
+        taken by pointers to the homonimous superset methods.
+        """
+
+        special = r'^__(.*?)\__$'
+
+        def takeover(obj, method):
+            if hasattr(obj.superset, method):
+                return getattr(obj.superset, method)
+            else:
+                return getattr(obj, '_' + method)
+
+        for k in dir(self):
+            v = getattr(self, k)
+            # If the attribute k is:
+            #    - a method
+            #    - which is not special
+            #    - whose name is the name of another method in the stream's sytem
+            if isinstance(v, types.MethodType) and not re.match(special, k) and k in dir(self.superset):
+                # Create private method
+                setattr(self, '_' + k, v)
+                # Replace public method by takeover
+                setattr(self, k, takeover(self, k))
+
+
+class superset:
+    """
+    Component superset class
+    """
+    def __call__(self, *args):
+        """
+        Superset set addition operator: <superset>(<list of sets>)
+
+        The gobble function must be implemented by the superset
+        child class (system).
+
+        :type args: set
+        """
+        self.gobble(list(args))
+
+
 class shaft:
     """
     Shaft
@@ -108,7 +174,7 @@ class shaft:
         return w_r_m + w_r_e
 
 
-class stream:
+class stream(set):
     """
     Stream
     ------
@@ -163,25 +229,30 @@ class stream:
         self.gas = gas
         return self
 
-    def __sub__(self, other):
+    def __mul__(self, other):                       # TODO: stream diversion
         """
-        Stream concatenation operator: <stream> - <component/stream>
+        Stream diversion operator: <stream> * n     for n: 0 =< float =< 1
         """
-        if isinstance(other, component):
-            self.add_component(other)
-            return self
-        if isinstance(other, stream):               # TODO: stream merge
-            return self.add_stream(other)
+        return self.divert(other)
 
+    def __getitem__(self, item):
+        """
+        Component retrieval operator: <stream>[<component stage name>]
+        """
+        return self.retrieve(item)
+
+    """
+    Operator functions
+    """
     def add_component(self, c):
         """
         Component addition
         """
         self.components.append(c)
         c.downstream = self.downstream
-        c.stream = self
+        c.stream = c.set = self
 
-    def add_stream(self, s):
+    def add_set(self, s):
         """
         Stream addition
         """
@@ -189,13 +260,13 @@ class stream:
                                                            'the stream merge operation to be possible.'
 
         n = max(self.stream_id[0], s.stream_id[0])  # Get largest stream_id
-        self.stream_id[0] = s.stream_id[0] = n      # Set largest stream_id for both merging streams
+        self.stream_id[0] = s.stream_id[0] = n  # Set largest stream_id for both merging streams
 
         merged = stream(parents=[self, s])
         merged.stream_id[0] = n + 1
 
         if hasattr(self, 'system') and hasattr(s, 'system'):
-            self.system = s.system = merged.system = self.system + s.system
+            self.superset = self.system = s.system = merged.system = self.system + s.system
             self.system(merged)
         elif hasattr(self, 'system'):
             self.system(s, merged)
@@ -205,12 +276,6 @@ class stream:
             system(self, s, merged)
 
         return merged
-
-    def __mul__(self, other):                       # TODO: stream diversion
-        """
-        Stream diversion operator: <stream> * n     for n: 0 =< float =< 1
-        """
-        return self.divert(other)
 
     def divert(self, fr, names=None):
         """
@@ -247,12 +312,6 @@ class stream:
             system(self, main, div)
 
         return main, div
-
-    def __getitem__(self, item):
-        """
-        Component retrieval operator: <stream>[<component stage name>]
-        """
-        return self.retrieve(item)
 
     def retrieve(self, item):
         """
@@ -434,40 +493,6 @@ class stream:
         assert self.ran, 'The stream must be run to obtain the specific entropy at each stage'
 
         return np.array([c.H for c in self.components])
-
-    """
-    System takeover
-    """
-    def system_takeover(self):
-        """
-        System takeover
-        ---------------
-
-        When a stream is integrated in a system, all
-        stream methods with a homonimous system method
-        are renamed as protected stream instance attributes,
-        and new "takeover" methods take their name.
-        """
-
-        special = r'^__(.*?)\__$'
-
-        def takeover(obj, method):
-            if hasattr(obj.system, method):
-                return getattr(obj.system, method)
-            else:
-                return getattr(obj, '_' + method)
-
-        for k in dir(self):
-            v = getattr(self, k)
-            # If the attribute k is:
-            #    - a method
-            #    - which is not special
-            #    - whose name is the name of another method in the stream's sytem
-            if isinstance(v, types.MethodType) and not re.match(special, k) and k in dir(self.system):
-                # Create private method
-                setattr(self, '_' + k, v)
-                # Replace public method by takeover
-                setattr(self, k, takeover(self, k))
 
     """
     Stream outlet flow characteristics
@@ -828,23 +853,6 @@ class system:
     """
     Operators
     """
-    def __call__(self, *args):
-        """
-        System stream addition operator: <system>(<list of streams>)
-
-        :type args: stream
-        """
-        self.gobble(list(args))
-
-    def gobble(self, streams):
-        """
-        :type streams: list of stream
-        """
-        for s in streams:
-            self.streams.append(s)
-            s.system = self
-            s.system_takeover()
-
     def __add__(self, other):
         """
         System addition operator: <system> + <stream/system>
@@ -859,6 +867,18 @@ class system:
         Component retrieval operator: <system>[<component stage name>]
         """
         return self.retrieve(item)
+
+    """
+    Operator functions
+    """
+    def gobble(self, streams):
+        """
+        :type streams: list of stream
+        """
+        for s in streams:
+            self.streams.append(s)
+            s.superset = s.system = self
+            s.superset_takeover()
 
     def retrieve(self, item):
         """
