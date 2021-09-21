@@ -65,7 +65,7 @@ class set:
             return self.add_set(other)
 
     """
-    System takeover
+    Superset takeover
     """
     def superset_takeover(self):
         """
