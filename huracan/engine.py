@@ -50,7 +50,40 @@ class component:
             setattr(self, sv, getattr(gas, sv))
 
 
-class set:
+class constructor_set(type):
+    """
+    Set metaclass
+    -------------
+
+    Ensure all necessary methods are implemented in child classes.
+    """
+    def __new__(cls, name, bases, body):
+
+        for i in ['add_component', 'add_set']:
+            if name != cls.__name__.split('_')[1] and i not in body:
+                raise TypeError(f'SET class build error: {i} method must be implemented in SET child classes.')
+
+        return super().__new__(cls, name, bases, body)
+
+
+class constructor_superset(type):
+    """
+    Superset metaclass
+    ------------------
+
+    Ensure all necessary methods are implemented in child classes.
+    """
+    def __new__(cls, name, bases, body):
+
+        for i in ['gobble']:
+            if name != cls.__name__.split('_')[1] and i not in body:
+                if i not in body:
+                    raise TypeError(f'SUPERSET class build error: {i} method must be implemented in SUPERSET child classes.')
+
+        return super().__new__(cls, name, bases, body)
+
+
+class set(metaclass=constructor_set):
     """
     Component set class
     """
@@ -100,7 +133,7 @@ class set:
                 setattr(self, k, takeover(self, k))
 
 
-class superset:
+class superset(metaclass=constructor_superset):
     """
     Component superset class
     """
@@ -836,7 +869,7 @@ class stream(set):
                 **further_custom)
 
 
-class system:
+class system(superset):
     """
     System
     ------
