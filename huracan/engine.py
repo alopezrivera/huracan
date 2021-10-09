@@ -300,9 +300,7 @@ class stream(SET):
         merged.stream_id[0] = n + 1
 
         if hasattr(self, 'system') and hasattr(s, 'system'):
-            print(self._run, '\n', self.run, '\n')
             self.superset = self.system = s.system = merged.system = self.system + s.system
-            print(self._run, '\n', self.run, '\n')
             self.system(merged)
         elif hasattr(self, 'system'):
             self.system(s, merged)
