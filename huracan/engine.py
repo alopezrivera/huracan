@@ -50,40 +50,40 @@ class component:
             setattr(self, sv, getattr(gas, sv))
 
 
-class constructor_set(type):
+class constructor_SET(type):
     """
     Set metaclass
     -------------
 
     Ensure all necessary methods are implemented in child classes.
     """
-    def __new__(cls, name, bases, body):
+    def __new__(mcs, name, bases, body):
 
         for i in ['add_component', 'add_set']:
-            if name != cls.__name__.split('_')[1] and i not in body:
+            if name != mcs.__name__.split('_')[1] and i not in body:
                 raise TypeError(f'SET class build error: {i} method must be implemented in SET child classes.')
 
-        return super().__new__(cls, name, bases, body)
+        return super().__new__(mcs, name, bases, body)
 
 
-class constructor_superset(type):
+class constructor_SUPERSET(type):
     """
     Superset metaclass
     ------------------
 
     Ensure all necessary methods are implemented in child classes.
     """
-    def __new__(cls, name, bases, body):
+    def __new__(mcs, name, bases, body):
 
         for i in ['gobble']:
-            if name != cls.__name__.split('_')[1] and i not in body:
+            if name != mcs.__name__.split('_')[1] and i not in body:
                 if i not in body:
                     raise TypeError(f'SUPERSET class build error: {i} method must be implemented in SUPERSET child classes.')
 
-        return super().__new__(cls, name, bases, body)
+        return super().__new__(mcs, name, bases, body)
 
 
-class set(metaclass=constructor_set):
+class SET(metaclass=constructor_SET):
     """
     Component set class
     """
@@ -94,7 +94,7 @@ class set(metaclass=constructor_set):
         if isinstance(other, component):
             self.add_component(other)
             return self
-        if isinstance(other, set):
+        if isinstance(other, SET):
             return self.add_set(other)
 
     """
@@ -125,15 +125,16 @@ class set(metaclass=constructor_set):
             # If the attribute k is:
             #    - a method
             #    - which is not special
-            #    - whose name is the name of another method in the stream's sytem
+            #    - whose name is the name of another method in the stream's system
             if isinstance(v, types.MethodType) and not re.match(special, k) and k in dir(self.superset):
-                # Create private method
-                setattr(self, '_' + k, v)
+                if not hasattr(self, '_' + k):
+                    # Create private method
+                    setattr(self, '_' + k, v)
                 # Replace public method by takeover
                 setattr(self, k, takeover(self, k))
 
 
-class superset(metaclass=constructor_superset):
+class SUPERSET(metaclass=constructor_SUPERSET):
     """
     Component superset class
     """
@@ -207,7 +208,7 @@ class shaft:
         return w_r_m + w_r_e
 
 
-class stream(set):
+class stream(SET):
     """
     Stream
     ------
@@ -293,13 +294,15 @@ class stream(set):
                                                            'the stream merge operation to be possible.'
 
         n = max(self.stream_id[0], s.stream_id[0])  # Get largest stream_id
-        self.stream_id[0] = s.stream_id[0] = n  # Set largest stream_id for both merging streams
+        self.stream_id[0] = s.stream_id[0] = n      # Set largest stream_id for both merging streams
 
         merged = stream(parents=[self, s])
         merged.stream_id[0] = n + 1
 
         if hasattr(self, 'system') and hasattr(s, 'system'):
+            print(self._run, '\n', self.run, '\n')
             self.superset = self.system = s.system = merged.system = self.system + s.system
+            print(self._run, '\n', self.run, '\n')
             self.system(merged)
         elif hasattr(self, 'system'):
             self.system(s, merged)
@@ -869,7 +872,7 @@ class stream(set):
                 **further_custom)
 
 
-class system(superset):
+class system(SUPERSET):
     """
     System
     ------
