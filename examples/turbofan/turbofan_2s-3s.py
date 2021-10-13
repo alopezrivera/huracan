@@ -49,7 +49,7 @@ s1bypass-nf
 
 stream.run()
 
-stream.plot_T_S(show=True, color='purple')
-stream.plot_p_V(show=True, color='orange')
-stream.plot_p_H(show=True, color='purple')
-stream.plot_T_p(show=True, color='orange')
+stream.plot_T_S(show=True, legend=False)
+stream.plot_p_V(show=True, legend=False)
+stream.plot_p_H(show=True, legend=False)
+stream.plot_T_p(show=True, legend=False)

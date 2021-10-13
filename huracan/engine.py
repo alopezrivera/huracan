@@ -20,6 +20,7 @@ from alexandria.shell import print_color, print_result
 from alexandria.data_structs.string import join_set_distance
 
 from huracan.constants import R
+from huracan.utils import markers
 
 
 class component:
@@ -857,7 +858,8 @@ class stream(SET):
                 # Color
                 color=color, alpha=0.65,
                 # Arrangement
-                zorder=1)
+                zorder=1,
+                )
         # Stages
         scatter(x=x, y=y,
                 # Figure
@@ -1064,10 +1066,8 @@ class system(SUPERSET):
              show=False,
              plot_label=None,                  # When called from a _system_takeover the plot_label and color
              color=colorscheme_one()[0],       # arguments are passed to the function, but disregarded.
+             colorblind=False,
              **kwargs):
-        """
-        General system plot.
-        """
         """
         System plot
         -----------
@@ -1098,7 +1098,7 @@ class system(SUPERSET):
         x_system   = []
         y_system   = []
 
-        defaults   = {'legend': True}
+        defaults   = {'legend': kwargs.pop('legend', True)}
 
         scales     = {'t0': 1,
                       'p0': 1/1000,
@@ -1120,8 +1120,13 @@ class system(SUPERSET):
                 'x_label': x_label,
                 'y_label': y_label,
                 'color': colorscheme_one()[self.streams.index(stream)],
-                'zorder': 10-self.streams.index(stream),
+                'zorder': self.streams.index(stream),
             }
+
+            if colorblind:
+                m      = markers(hollow=False)
+                marker = m[self.streams.index(stream)]
+                subplot_defaults = {**subplot_defaults, **marker}
 
             def gen_plotter(**defaults):
                 """
@@ -1129,7 +1134,7 @@ class system(SUPERSET):
                 Any keyword arguemnts passed to the
                 _plot function overwrite the defaults.
                 """
-                return lambda x, y, **kwargs: stream.plot_cycle_graph(x=x, y=y, **{**kwargs, **defaults})
+                return lambda x, y, **kwargs: stream.plot_cycle_graph(x=x, y=y, **{**defaults, **kwargs})
 
             x_stream = getattr(stream, x)()*x_scale
             y_stream = getattr(stream, y)()*y_scale
@@ -1146,10 +1151,22 @@ class system(SUPERSET):
                     # If the parent stream has no stages, get parent stream's gas state
                     p_x = x_parent[-1] if len(x_parent) != 0 else getattr(parent.gas, x)*x_scale
                     p_y = y_parent[-1] if len(y_parent) != 0 else getattr(parent.gas, y)*y_scale
+                    # Connector
                     if len(stream.components) > 0:
                         x_system.append(np.array([p_x, x_stream[0]]))
                         y_system.append(np.array([p_y, y_stream[0]]))
-                        plotters.append(gen_plotter(color=subplot_defaults['color'], x_label=None, y_label=None))
+
+                        connector_args = {'color': subplot_defaults['color'],
+                                          'plot_label': None,
+                                          'x_label': None,
+                                          'y_label': None,
+                                          'zorder': self.streams.index(stream),
+                                          }
+
+                        if colorblind:
+                            connector_args = {**connector_args, **marker}
+
+                        plotters.append(gen_plotter(**connector_args))
 
         # 2.2 Remove streams with no stages
         mask_x = np.array([a.size != 0 for a in x_system])
@@ -1164,8 +1181,11 @@ class system(SUPERSET):
         #     - fig=None, ax=None -> plot_cycle_graph -> fig in **kwargs keys
         #         - fig=None, ax=None -> line, scatter
         #             - line, scatter plot onto active figure, axis
-        comparison(x=x_system, y=y_system, f=plotters,
+        comparison(x=x_system,
+                   y=y_system,
+                   f=plotters,
                    legend_loc=(0.875, 0.425),
+                   autocolor=False,
                    show=show,
                    **{**kwargs, **defaults})
 
@@ -1173,6 +1193,7 @@ class system(SUPERSET):
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
+                 colorblind=False,
                  **kwargs
                  ):
         """
@@ -1190,6 +1211,7 @@ class system(SUPERSET):
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
+                 colorblind=False,
                  **kwargs):
         """
         Pressure-Volume system plot.
@@ -1206,6 +1228,7 @@ class system(SUPERSET):
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
+                 colorblind=False,
                  **kwargs):
         """
         Temperature-Entropy system plot.
@@ -1222,6 +1245,7 @@ class system(SUPERSET):
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
+                 colorblind=False,
                  **kwargs):
         """
         Pressure-Enthalpy system plot.

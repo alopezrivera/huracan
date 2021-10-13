@@ -6,6 +6,7 @@ Huracan utilities
 -----------------
 """
 
+import re
 import sys
 import inspect
 
@@ -47,3 +48,70 @@ def setattr_namespace(o, namespace):
                 and not isinstance(o, value if inspect.isclass(value) else type(value)):  # Avoid _o_, parent of _o_
             # Set namespace variables as attributes of the input object
             setattr(o, key, value)
+
+
+class markers:
+    """
+    Markers class
+    -------------
+    """
+    circle          = "o"
+    x               = "x"
+    thin_diamond    = "d"
+    triangle_down   = "v"
+    pentagon        = "p"
+    vline           = "|"
+    hline           = "_"
+    # Decent
+    point           = "."
+    square          = "s"
+    plus            = "+"
+    triangle_up     = "^"
+    triangle_left   = "<"
+    triangle_right  = ">"
+    tri_down        = "1"
+    tri_up          = "2"
+    tri_left        = "3"
+    tri_right       = "4"
+    octagon         = "8"
+    hexagon1        = "h"
+    hexagon2        = "H"
+    diamond         = "D"
+    tickleft        = 0
+    tickright       = 1
+    tickup          = 2
+    tickdown        = 3
+    caretleft       = 4
+    caretright      = 5
+    caretup         = 6
+    caretdown       = 7
+    caretleft_base  = 8
+    caretright_base = 9
+    caretup_base    = 10
+    caretdown_base  = 11
+    # Wonky tier
+    plus_filled     = "P"
+    star            = "*"
+    # Garbage tier
+    pixel           = ","
+
+    def __init__(self, hollow=False, plotter='plot'):
+        self.hollow  = hollow
+        self.plotter = plotter
+
+        assert self.plotter in ['plot', 'scatter'], \
+            "Plotter must be either 'plot' (for plt.plot, ax.scatter) or 'scatter' (plt.scatter)"
+
+    def __getitem__(self, item):
+
+        special = r'^__(.*?)\__$'
+        keys    = [k for k in markers.__dict__.keys() if not re.match(special, k)]
+        marker  = {'marker': markers.__dict__[keys[item]]}
+
+        if self.hollow:
+            if self.plotter == 'scatter':
+                marker['mfc']        = 'none'
+            else:
+                marker['facecolors'] = 'none'
+
+        return marker
