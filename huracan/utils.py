@@ -95,6 +95,9 @@ class markers:
     # Garbage tier
     pixel           = ","
 
+    # Icompatible
+    incompatible    = [x]
+
     def __init__(self, hollow=False, plotter='plot'):
         self.hollow  = hollow
         self.plotter = plotter
@@ -105,8 +108,10 @@ class markers:
     def __getitem__(self, item):
 
         special = r'^__(.*?)\__$'
-        keys    = [k for k in markers.__dict__.keys() if not re.match(special, k)]
-        marker  = {'marker': markers.__dict__[keys[item]]}
+
+        m       = {k: markers.__dict__[k] for k in markers.__dict__.keys() if (self.hollow and k not in self.incompatible) or not self.hollow}
+        keys    = [k for k in m.keys() if not re.match(special, k)]
+        marker  = {'marker': m[keys[item]]}
 
         if self.hollow:
             if self.plotter == 'scatter':
