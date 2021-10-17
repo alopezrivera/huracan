@@ -52,5 +52,5 @@ stream.run()
 
 stream.plot_T_S(show=True, color='purple', legend=True)
 stream.plot_p_V(show=True, color='orange', legend=True)
-stream.plot_p_H(show=True, color='purple', legend=True)
+stream.plot_H_p(show=True, color='purple', legend=True)
 stream.plot_T_p(show=True, color='orange', legend=True)

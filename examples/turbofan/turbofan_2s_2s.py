@@ -51,5 +51,5 @@ stream.run()
 
 stream.plot_T_S(show=True, legend=True)
 stream.plot_p_V(show=True, legend=True)
-stream.plot_p_H(show=True, legend=True)
+stream.plot_H_p(show=True, legend=True)
 stream.plot_T_p(show=True, legend=True)

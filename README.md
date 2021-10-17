@@ -25,36 +25,36 @@ and similar architectures are used in well known proprietary tools such as
 
 ### [Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)
 
-| <p align="left"><img width=625 src="docs/figures/diagram_turboprop.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turboprop.png" /></p> |
+| <p align="left"><img width=625 src="docs/figures/diagram_turboprop.svg" /></p> | <p align="right"><img width=250 src="docs/figures/log_turboprop.svg" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/TS_turboprop.png "T-S plot") |
+| ![alt text](docs/figures/TS_turboprop.svg "T-S plot") |
 | --- |
-| ![alt text](docs/figures/pV_turboprop.png "p-V plot") |
-| ![alt text](docs/figures/Hp_turboprop.png "H-p plot") |
-| ![alt text](docs/figures/Tp_turboprop.png "T-p plot") |
+| ![alt text](docs/figures/pV_turboprop.svg "p-V plot") |
+| ![alt text](docs/figures/Hp_turboprop.svg "H-p plot") |
+| ![alt text](docs/figures/Tp_turboprop.svg "T-p plot") |
 
 ### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s-ab.py)
 
-| <p align="left"><img width=625 src="docs/figures/diagram_turbojet.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.png" /></p> |
+| <p align="left"><img width=625 src="docs/figures/diagram_turbojet.svg" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.svg" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/TS_turbojet.png "T-S plot") |
+| ![alt text](docs/figures/TS_turbojet.svg "T-S plot") |
 | --- |
-| ![alt text](docs/figures/pV_turbojet.png "p-V plot") |
-| ![alt text](docs/figures/Hp_turbojet.png "H-p plot") |
-| ![alt text](docs/figures/Tp_turbojet.png "T-p plot") |
+| ![alt text](docs/figures/pV_turbojet.svg "p-V plot") |
+| ![alt text](docs/figures/Hp_turbojet.svg "H-p plot") |
+| ![alt text](docs/figures/Tp_turbojet.svg "T-p plot") |
 
 ### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)
 
-| <p align="left"><img width=625 src="docs/figures/diagram_turbofan.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbofan.png" /></p> |
+| <p align="left"><img width=625 src="docs/figures/diagram_turbofan.svg" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbofan.svg" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/TS_turbofan.png "T-S plot") |
+| ![alt text](docs/figures/TS_turbofan.svg "T-S plot") |
 | --- |
-| ![alt text](docs/figures/pV_turbofan.png "p-V plot") |
-| ![alt text](docs/figures/Hp_turbofan.png "H-p plot") |
-| ![alt text](docs/figures/Tp_turbofan.png "T-p plot") |
+| ![alt text](docs/figures/pV_turbofan.svg "p-V plot") |
+| ![alt text](docs/figures/Hp_turbofan.svg "H-p plot") |
+| ![alt text](docs/figures/Tp_turbofan.svg "T-p plot") |
 
 ---
 [Back to top](#huracan)
