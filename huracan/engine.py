@@ -766,7 +766,7 @@ class stream(SET):
                               y_tick_ndecimals=2,
                               **further_custom)
 
-    def plot_p_H(self,
+    def plot_H_p(self,
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
@@ -1242,7 +1242,7 @@ class system(SUPERSET):
                   y='t0', y_label='T$_0$ [K]',
                   **{**args, **kwargs})
 
-    def plot_p_H(self,
+    def plot_H_p(self,
                  show=False,
                  plot_label=None,
                  color=colorscheme_one()[0],
