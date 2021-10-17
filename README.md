@@ -36,7 +36,7 @@ and similar architectures are used in well known proprietary tools such as
 
 ### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s-ab.py)
 
-| <p align="left"><img width=625 src="docs/figures/diagram_turbojet.svg" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.png" /></p> |
+| <p align="left"><img width=625 src="docs/figures/diagram_turbojet.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.png" /></p> |
 | --- | --- |
 
 | ![alt text](docs/figures/TS_turbojet.svg "T-S plot") |
