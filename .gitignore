@@ -23,3 +23,6 @@ tests/verification/__pycache__/*
 tests/.pytest_cache/*
 tests/utils/.pytest_cache/*
 tests/verification/.pytest_cache/*
+
+# Demo utilities
+examples/utils.py

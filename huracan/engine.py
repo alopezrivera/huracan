@@ -1185,7 +1185,7 @@ class system(SUPERSET):
         comparison(x=x_system,
                    y=y_system,
                    f=plotters,
-                   legend_loc=(0.875, 0.425),
+                   legend_loc=(0.865, 0.425),
                    autocolor=False,
                    show=show,
                    **{**kwargs, **defaults})
