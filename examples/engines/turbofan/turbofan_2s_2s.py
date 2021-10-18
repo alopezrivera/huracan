@@ -18,7 +18,7 @@ p  = 89874
 
 bpr = 9.6
 
-fuel = fuel(LHV=43e6)
+f = fuel(LHV=43e6)
 
 g = gas(mf=mf,
         cp=lambda T: 1150 if T > 600 else 1000,
@@ -29,7 +29,7 @@ i  = inlet             (PI=0.98)
 fn = fan               (eta=0.92, PI=1.54)
 c1 = compressor        (eta=0.89, PI=1.54)
 c2 = compressor        (eta=0.89, PI=9.86)
-cc = combustion_chamber(fuel=fuel, eta=0.965, PI=0.98)
+cc = combustion_chamber(fuel=f, eta=0.965, PI=0.98)
 t1 = turbine           (eta=0.89)
 t2 = turbine           (eta=0.89)
 n  = nozzle            (eta=1)
