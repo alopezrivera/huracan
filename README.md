@@ -23,7 +23,7 @@ and similar architectures are used in well known proprietary tools such as
 
 ## Examples
 
-### [Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turboprop/turboprop_1s-1s.py)
+### [Single spool turboprop engine.](https://github.com/alopezrivera/huracan/blob/master/examples/engines/turboprop/turboprop_1s-1s.py)
 
 | <p align="left"><img width=625 src="docs/figures/diagram_turboprop.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turboprop.png" /></p> |
 | --- | --- |
@@ -34,7 +34,7 @@ and similar architectures are used in well known proprietary tools such as
 | ![alt text](docs/figures/Hp_turboprop.svg "H-p plot") |
 | ![alt text](docs/figures/Tp_turboprop.svg "T-p plot") |
 
-### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/turbojet/turbojet_1s-2s-ab.py)
+### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/engines/turbojet/turbojet_1s-2s-ab.py)
 
 | <p align="left"><img width=625 src="docs/figures/diagram_turbojet.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbojet.png" /></p> |
 | --- | --- |
@@ -45,7 +45,7 @@ and similar architectures are used in well known proprietary tools such as
 | ![alt text](docs/figures/Hp_turbojet.svg "H-p plot") |
 | ![alt text](docs/figures/Tp_turbojet.svg "T-p plot") |
 
-### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/turbofan/turbofan_2s-3s.py)
+### [Three-spool, separated exhaust turbofan engine.](https://github.com/alopezrivera/huracan/blob/master/examples/engines/turbofan/turbofan_2s-3s.py)
 
 | <p align="left"><img width=625 src="docs/figures/diagram_turbofan.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turbofan.png" /></p> |
 | --- | --- |
