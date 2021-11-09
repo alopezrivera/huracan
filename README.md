@@ -28,11 +28,8 @@ and similar architectures are used in well known proprietary tools such as
 | <p align="left"><img width=625 src="docs/figures/diagram_turboprop.png" /></p> | <p align="right"><img width=250 src="docs/figures/log_turboprop.png" /></p> |
 | --- | --- |
 
-| ![alt text](docs/figures/TS_turboprop.svg "T-S plot") |
-| --- |
-| ![alt text](docs/figures/pV_turboprop.svg "p-V plot") |
-| ![alt text](docs/figures/Hp_turboprop.svg "H-p plot") |
-| ![alt text](docs/figures/Tp_turboprop.svg "T-p plot") |
+| ![alt text](docs/figures/TS_turboprop.svg "T-S plot") | ![alt text](docs/figures/pV_turboprop.svg "p-V plot") | ![alt text](docs/figures/Hp_turboprop.svg "H-p plot") | ![alt text](docs/figures/Tp_turboprop.svg "T-p plot") |
+| --- | --- | --- | --- |
 
 ### [Twin-spool, reheated turbojet engine with an electrical power plant.](https://github.com/alopezrivera/huracan/blob/master/examples/engines/turbojet/turbojet_1s-2s-ab.py)
 
