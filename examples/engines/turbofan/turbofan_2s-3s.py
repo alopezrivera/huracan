@@ -34,7 +34,7 @@ t1 = turbine           (eta=0.96)
 t2 = turbine           (eta=0.965)
 t3 = turbine           (eta=0.97)
 nc = nozzle            (eta=0.95)
-nf = nozzle            (eta=0.96)
+nb = nozzle            (eta=0.96)
 
 shaft1 = shaft(fn, t3, eta=0.995)
 shaft2 = shaft(c1, t2, eta=0.995)
@@ -42,10 +42,10 @@ shaft3 = shaft(c2, t1, eta=0.995)
 
 stream = g-i-fn
 
-s1core, s1bypass = stream*(bpr/(bpr+1))
+core, bypass = stream*(bpr/(bpr+1))
 
-s1core-c1-c2-cc-t1-t2-t3-nc
-s1bypass-nf
+core-c1-c2-cc-t1-t2-t3-nc
+bypass-nb
 
 stream.run()
 
