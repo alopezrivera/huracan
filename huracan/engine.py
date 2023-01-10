@@ -866,8 +866,8 @@ class stream(SET):
                 fig=fig,
                 # Further customization
                 plot_label=plot_label,
-                x_label=x_label,
-                y_label=y_label,
+                label_x=x_label,
+                label_y=y_label,
                 show=show,
                 **further_custom)
 
