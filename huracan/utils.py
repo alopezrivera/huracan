@@ -115,12 +115,13 @@ class markers:
 
         m       = {k: markers.__dict__[k] for k in markers.__dict__.keys() if (self.hollow and k not in self.incompatible) or not self.hollow}
         keys    = [k for k in m.keys() if not re.match(special, k)]
-        marker  = {'marker': m[keys[item]]}
+        marker  = {'scatter_marker': m[keys[item]]}
 
+        # FIXME: hollow markers disappear
         if self.hollow:
             if self.plotter == 'scatter':
-                marker['mfc']        = 'none'
+                marker['mfc'] = 'none'
             else:
-                marker['facecolors'] = 'none'
+                marker['scatter_facecolors'] = 'none'
 
         return marker

@@ -736,7 +736,7 @@ class stream(SET):
                               plot_label=plot_label,
                               show=show,
                               # Further customization
-                              y_tick_ndecimals=2,
+                              tick_label_decimals_y=2,
                               **further_custom)
 
     def plot_p_V(self,
@@ -760,7 +760,7 @@ class stream(SET):
                               plot_label=plot_label,
                               show=show,
                               # Further customization
-                              y_tick_ndecimals=2,
+                              tick_label_decimals_y=2,
                               **further_custom)
 
     def plot_H_p(self,
@@ -784,7 +784,7 @@ class stream(SET):
                               plot_label=plot_label,
                               show=show,
                               # Further customization
-                              y_tick_ndecimals=2,
+                              tick_label_decimals_y=2,
                               **further_custom)
 
     def plot_T_p(self,
@@ -808,7 +808,7 @@ class stream(SET):
                               plot_label=plot_label,
                               show=show,
                               # Further customization
-                              x_tick_ndecimals=2,
+                              tick_label_decimals_x=2,
                               **further_custom)
 
     def plot_cycle_graph(self,
@@ -1121,7 +1121,7 @@ class system(SUPERSET):
             }
 
             if colorblind:
-                m      = markers(hollow=True)
+                m      = markers()
                 marker = m[self.streams.index(stream)]
                 subplot_defaults = {**subplot_defaults, **marker}
 
