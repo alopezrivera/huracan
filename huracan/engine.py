@@ -16,11 +16,8 @@ from mpl_plotter.two_d import line, scatter, comparison
 from mpl_plotter.color.schemes import colorscheme_one
 from mpl_plotter.color.functions import delta
 
-from alexandria.shell import print_color, print_result
-from alexandria.data_structs.string import join_set_distance
-
 from huracan.constants import R
-from huracan.utils import markers
+from huracan.utils import markers, join_set_distance
 
 
 class component:
@@ -430,13 +427,13 @@ class stream(SET):
 
         for c in self.components:
             section_name = join_set_distance(c.stage, c.__class__.__name__.capitalize().replace("_", " "), d)
-            print_color(section_name, 'green')
+            print(section_name)
 
             if c.__class__.__name__ == 'nozzle':
                 if c.choked:
-                    print_color(' '*d + 'Choked flow', 'red')
-            print_result(' '*(d+1) + 'T0', c.t0, '[K]')
-            print_result(' '*(d+1) + 'p0', c.p0, '[Pa]')
+                    print(' '*d + 'Choked flow')
+            print(f'{" "*d} T0 {str(c.t0)[:10]} [K]')
+            print(f'{" "*d} p0 {str(c.p0)[:10]} [Pa]')
 
     """
     Stream runtime functions
@@ -729,8 +726,8 @@ class stream(SET):
 
         figure((9, 5))
 
-        defaults = {'x_label': '$\Delta$S [kJ/K/n]',
-                    'y_label': 'T$_0$ [K]',}
+        defaults = {'label_x': r'$\Delta$S [kJ/K/n]',
+                    'label_y': r'T$_0$ [K]',}
 
         further_custom = {**defaults, **kwargs}
 
@@ -753,8 +750,8 @@ class stream(SET):
 
         figure((9, 5))
 
-        defaults = {'x_label': 'v$_0$ [m$^3$/n]',
-                    'y_label': 'p$_0$ [kPa]'}
+        defaults = {'label_x': 'v$_0$ [m$^3$/n]',
+                    'label_y': 'p$_0$ [kPa]'}
 
         further_custom = {**defaults, **kwargs}
 
@@ -777,8 +774,8 @@ class stream(SET):
 
         figure((9, 5))
 
-        defaults = {'x_label': 'p$_0$ [kPa]',
-                    'y_label': 'H$_0$ [kJ]',}
+        defaults = {'label_x': 'p$_0$ [kPa]',
+                    'label_y': 'H$_0$ [kJ]',}
 
         further_custom = {**defaults, **kwargs}
 
@@ -801,8 +798,8 @@ class stream(SET):
 
         figure((9, 5))
 
-        defaults = {'x_label': 'p$_0$ [kPa]',
-                    'y_label': 'T$_0$ [K]'}
+        defaults = {'label_x': 'p$_0$ [kPa]',
+                    'label_y': 'T$_0$ [K]'}
 
         further_custom = {**defaults, **kwargs}
 
@@ -817,7 +814,7 @@ class stream(SET):
     def plot_cycle_graph(self,
                          x, y,
                          plot_label,
-                         x_label, y_label,
+                         label_x, label_y,
                          color=colorscheme_one()[0],
                          show=False,
                          **kwargs
@@ -832,19 +829,19 @@ class stream(SET):
 
         defaults = {
             # Specifics
-            'point_size': 30,
+            'scatter_size': 30,
             # Markers
-            'marker': 'x',
+            'scatter_marker': 'x',
             # Color
             'color': delta(color, -0.3),
             # Arrangement
             'zorder': 2,
             # Further customization
             'aspect': 1/2,
-            'x_tick_number': 10,
-            'y_tick_number': 10,
-            'demo_pad_plot': True,
-            'y_label_pad': 5,
+            'tick_number_x': 10,
+            'tick_number_y': 10,
+            'pad_demo': True,
+            'label_pad_y': 5,
         }
 
         further_custom = {**defaults, **kwargs}
@@ -866,8 +863,8 @@ class stream(SET):
                 fig=fig,
                 # Further customization
                 plot_label=plot_label,
-                label_x=x_label,
-                label_y=y_label,
+                label_x=label_x,
+                label_y=label_y,
                 show=show,
                 **further_custom)
 
@@ -1062,7 +1059,7 @@ class system(SUPERSET):
     def plot(self,
              x, y,
              x_scale=None, y_scale=None,
-             x_label=None, y_label=None,
+             label_x=None, label_y=None,
              show=False,
              plot_label=None,                  # When called from a _system_takeover the plot_label and color
              color=colorscheme_one()[0],       # arguments are passed to the function, but disregarded.
@@ -1117,8 +1114,8 @@ class system(SUPERSET):
             # Plot defaults
             subplot_defaults = {
                 'plot_label': f'{".".join([str(c) for c in stream.stream_id])}',
-                'x_label': x_label,
-                'y_label': y_label,
+                'label_x': label_x,
+                'label_y': label_y,
                 'color': colorscheme_one()[self.streams.index(stream)],
                 'zorder': self.streams.index(stream),
             }
@@ -1159,9 +1156,9 @@ class system(SUPERSET):
                         connector_args = {'color': subplot_defaults['color'],
                                           'zorder': self.streams.index(stream),
                                           'plot_label': None,
-                                          'x_label': None,
-                                          'y_label': None,
-                                          'marker': ''
+                                          'label_x': None,
+                                          'label_y': None,
+                                          'scatter_marker': ''
                                           }
 
                         if colorblind:
@@ -1189,7 +1186,7 @@ class system(SUPERSET):
                    autocolor=False,
                    show=show,
                    **{**kwargs, **defaults})
-
+    
     def plot_T_p(self,
                  show=False,
                  plot_label=None,
@@ -1204,8 +1201,8 @@ class system(SUPERSET):
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='p0', x_label='p$_0$ [kPa]',
-                  y='t0', y_label='T$_0$ [K]',
+        self.plot(x='p0', label_x='p$_0$ [kPa]',
+                  y='t0', label_y='T$_0$ [K]',
                   **{**args, **kwargs})
 
     def plot_p_V(self,
@@ -1221,8 +1218,8 @@ class system(SUPERSET):
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='V',  x_label='v$_0$ [m$^3$/n]',
-                  y='p0', y_label='p$_0$ [kPa]',
+        self.plot(x='V',  label_x='v$_0$ [m$^3$/n]',
+                  y='p0', label_y='p$_0$ [kPa]',
                   **{**args, **kwargs})
 
     def plot_T_S(self,
@@ -1238,8 +1235,8 @@ class system(SUPERSET):
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='S',  x_label='$\Delta$S [kJ/K]',
-                  y='t0', y_label='T$_0$ [K]',
+        self.plot(x='S',  label_x=r'$\Delta$S [kJ/K]',
+                  y='t0', label_y=r'T$_0$ [K]',
                   **{**args, **kwargs})
 
     def plot_H_p(self,
@@ -1255,6 +1252,6 @@ class system(SUPERSET):
         args.pop('self', None)
         args.pop('kwargs', None)
 
-        self.plot(x='p0', x_label='p$_0$ [kPa]',
-                  y='H',  y_label='H$_0$ [kJ]',
+        self.plot(x='p0', label_x='p$_0$ [kPa]',
+                  y='H',  label_y='H$_0$ [kJ]',
                   **{**args, **kwargs})

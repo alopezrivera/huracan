@@ -1,15 +1,22 @@
 # SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
 # SPDX-License-Identifier: GPL-3.0-only
 
+# Path
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[1]))
+
+# General imports
 import unittest
 
+# Huracan
 from huracan.thermo.fluids import gas, fuel
 
 mf = 700
 m  = 0.6
 t  = 288
 p  = 101325
-fr = 0
+fr = 0.1
 
 g = gas(mf = mf,
         cp = lambda T: 1150 if T > 600 else 1000,

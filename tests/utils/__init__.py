@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-from alexandria.shell import print_color
-from alexandria.data_structs.string import join_set_distance
+from huracan.utils import join_set_distance
 
 
 def verify(prediction, measurement, error_margin=0.001, log=False, name='Error'):
@@ -23,4 +22,4 @@ def verify(prediction, measurement, error_margin=0.001, log=False, name='Error')
 
     if log:
         s = join_set_distance(name, '=', 10)
-        print_color(s + f' {abs(prediction-measurement)/measurement*100:.2f}% of measurement.', 'yellow')
+        print(s + f' {abs(prediction-measurement)/measurement*100:.2f}% of measurement.')

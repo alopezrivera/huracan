@@ -15,7 +15,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "numpy>=1.21.2",
-        "Python-Alexandria>=2.0.0",
         "mpl_plotter>=4.0.2"
     ],
     classifiers=[

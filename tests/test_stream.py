@@ -1,8 +1,15 @@
 # SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
 # SPDX-License-Identifier: GPL-3.0-only
 
+# Path
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[1]))
+
+# General imports
 import unittest
 
+# Huracan
 from huracan.components import inlet, compressor, turbine, nozzle
 from huracan.thermo.fluids import gas
 

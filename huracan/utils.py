@@ -11,6 +11,10 @@ import sys
 import inspect
 
 
+def join_set_distance(a, b, d):
+    return a + ' '*(d - len(a)) + b
+
+
 def setattr_namespace(o, namespace):
     """
     Set all variables declared in a namespace as as attributes

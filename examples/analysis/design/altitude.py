@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
 # SPDX-License-Identifier: GPL-3.0-only
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[3]))
+
 """
 Huracan
 -------
@@ -89,8 +93,8 @@ cmap = mpl.cm.get_cmap('RdBu')
 
 panes([thrust, eff],
       h,
-      x_labels=['T [kN]', '$\eta_T$'],
-      y_label='h [km]',
+      labels_x=['T [kN]', '$\eta_T$'],
+      label_y='h [km]',
       colors=[cmap(Mi) for Mi in M],
       line_width=2,
       top=0.95,

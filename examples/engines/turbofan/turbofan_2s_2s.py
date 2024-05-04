@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: © 2021 Antonio López Rivera <antonlopezr99@gmail.com>
 # SPDX-License-Identifier: GPL-3.0-only
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[3]))
+
 """
 Huracan
 -------
