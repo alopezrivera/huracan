@@ -1,2 +1,2 @@
 numpy
-mpl-plotter>=55.5.0
+mpl-plotter>=5.5.0
