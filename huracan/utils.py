@@ -10,6 +10,8 @@ import re
 import sys
 import inspect
 
+from matplotlib.colors import to_hex, to_rgba
+
 
 def join_set_distance(a, b, d):
     return a + ' '*(d - len(a)) + b
@@ -115,13 +117,60 @@ class markers:
 
         m       = {k: markers.__dict__[k] for k in markers.__dict__.keys() if (self.hollow and k not in self.incompatible) or not self.hollow}
         keys    = [k for k in m.keys() if not re.match(special, k)]
-        marker  = {'scatter_marker': m[keys[item]]}
+        marker  = {'marker': m[keys[item]]}
 
         # FIXME: hollow markers disappear
         if self.hollow:
             if self.plotter == 'scatter':
-                marker['mfc'] = 'none'
+                marker['mfc'] = 'white'
             else:
-                marker['scatter_facecolors'] = 'none'
+                marker['facecolors'] = 'white'
 
         return marker
+
+
+def delta(color, factor, fmt='hex'):
+    """
+    Darker or lighten the input color by a percentage of
+    <factor> ([-1, 1]) of the color spectrum (0-255).
+
+    :param fmt:    Output format: 'hex' or 'rgb'.
+    :param factor: [-1, 1] Measure in which the color will be modified.
+
+    :type color:   list of int or string
+    :type factor:  float
+    :type fmt:     string
+    """
+
+    assert isinstance(color, list) or isinstance(color, tuple) or isinstance(color, str)
+
+    if isinstance(color, list) or isinstance(color, tuple):
+        c_mod = [min(max(0, i + factor), 1) for i in color]
+    elif isinstance(color, str):
+        c_mod = [min(max(0, i + factor), 1) for i in to_rgba(color, 1.0)]
+
+    if fmt == 'hex':
+        return to_hex(c_mod)
+    elif fmt == 'rgb':
+        return c_mod
+    
+
+def colorscheme_one():
+    custom = ["darkred",
+              "#1f8fff",
+              "#FF8F1F",
+              "#00C298",
+              "#FFBD00",
+              "#00FFC4",
+              "#FF003B"]
+    tableau = ['tab:blue',
+               'tab:orange',
+               'tab:green',
+               'tab:red',
+               'tab:purple',
+               'tab:brown',
+               'tab:pink',
+               'tab:gray',
+               'tab:olive',
+               'tab:cyan']
+    return custom + tableau

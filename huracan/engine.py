@@ -12,14 +12,12 @@ import warnings
 import numpy as np
 from copy import deepcopy
 
-from mpl_plotter import figure
-from mpl_plotter.two_d import line, scatter, comparison
-from mpl_plotter.color.schemes import colorscheme_one
-from mpl_plotter.color.functions import delta
+import matplotlib.pyplot as plt
 
 from huracan.constants import R
+from huracan import component_codes
 from huracan.physical_quantities import physical_quantities
-from huracan.utils import markers, join_set_distance
+from huracan.utils import markers, join_set_distance, delta, colorscheme_one
 
 
 class component_set_constructor(type):
@@ -704,11 +702,12 @@ class stream(set_of_components, metaclass=component_set_constructor):
              plot_label=None,
              color=colorscheme_one()[0],
              **kwargs):
+        warnings.warn('`<stream or system>.plot_T_S(...)` is deprecated in favor of `<stream or system>.plot(x="S", "y=t0", ...)` and will be removed from Huracan in the next major release', DeprecationWarning, stacklevel=2)
         """
         Temperature-Entropy stream plot.
         """
 
-        figure((9, 5))
+        plt.figure(figsize=(9, 5))
 
         defaults = {'label_x': r'$\Delta$S [kJ/K/n]',
                     'label_y': r'T$_0$ [K]',}
@@ -728,11 +727,12 @@ class stream(set_of_components, metaclass=component_set_constructor):
                  plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
+        warnings.warn('`<stream or system>.plot_p_V(...)` is deprecated in favor of `<stream or system>.plot(x="V", "y=p0", ...)` and will be removed from Huracan in the next major release', DeprecationWarning, stacklevel=2)
         """
         Pressure-Volume stream plot.
         """
 
-        figure((9, 5))
+        plt.figure(figsize=(9, 5))
 
         defaults = {'label_x': 'v$_0$ [m$^3$/n]',
                     'label_y': 'p$_0$ [kPa]'}
@@ -752,11 +752,12 @@ class stream(set_of_components, metaclass=component_set_constructor):
                  plot_label=None,
                  color=colorscheme_one()[0],
                  **kwargs):
+        warnings.warn('`<stream or system>.plot_H_p(...)` is deprecated in favor of `<stream or system>.plot(x="p0", y="H", ...)` and will be removed from Huracan in the next major release', DeprecationWarning, stacklevel=2)
         """
         Pressure-Enthalpy stream plot.
         """
 
-        figure((9, 5))
+        plt.figure(figsize=(9, 5))
 
         defaults = {'label_x': 'p$_0$ [kPa]',
                     'label_y': 'H$_0$ [kJ]',}
@@ -776,11 +777,12 @@ class stream(set_of_components, metaclass=component_set_constructor):
              plot_label=None,
              color=colorscheme_one()[0],
              **kwargs):
+        warnings.warn('`<stream or system>.plot_T_p(...)` is deprecated in favor of `<stream or system>.plot(x="V", "y=p0", ...)` and will be removed from Huracan in the next major release', DeprecationWarning, stacklevel=2)
         """
         Temperature-Pressure system plot.
         """
 
-        figure((9, 5))
+        plt.figure(figsize=(9, 5))
 
         defaults = {'label_x': 'p$_0$ [kPa]',
                     'label_y': 'T$_0$ [K]'}
@@ -794,6 +796,41 @@ class stream(set_of_components, metaclass=component_set_constructor):
                               # Further customization
                               tick_label_decimals_x=2,
                               **further_custom)
+
+    def plot(self, 
+             x, y,
+             show=False,
+             plot_label=None,
+             color=colorscheme_one()[0],
+             **kwargs):
+        """
+        Create a cycle plot of two physical quantities of the stream.
+        """
+
+        name_x_default, label_x_default, scale_x_default = physical_quantities[x]
+        name_y_default, label_y_default, scale_y_default = physical_quantities[y]
+
+        scale_x = scale_x_default if isinstance(scale_x, type(None)) else scale_x
+        scale_y = scale_y_default if isinstance(scale_y, type(None)) else scale_y
+        label_x = label_x_default if isinstance(label_x, type(None)) else label_x
+        label_y = label_y_default if isinstance(label_y, type(None)) else label_y
+
+        x = getattr(self, x) * scale_x
+        y = getattr(self, y) * scale_y
+
+        defaults = {'label_x': label_x,
+                    'label_y': label_y}
+
+        further_custom = {**defaults, **kwargs}
+
+        self.plot_cycle_graph(
+            x, y,
+            color=color,
+            plot_label=plot_label,
+            show=show,
+            # Further customization
+            tick_label_decimals_x=2,
+            **further_custom)
 
     def plot_cycle_graph(self,
                          x, y,
@@ -809,49 +846,29 @@ class stream(set_of_components, metaclass=component_set_constructor):
         The default arguments plus any valid MPL Plotter line plotting
         class arguments can be passed to this function.
         """
+
         fig = kwargs.pop('fig', None)
 
-        defaults = {
-            # Specifics
-            'scatter_size': 30,
-            # Markers
-            'scatter_marker': 'x',
-            # Color
-            'color': delta(color, -0.3),
-            # Arrangement
-            'zorder': 2,
-            # Further customization
-            'aspect': 1/2,
-            'tick_number_x': 10,
-            'tick_number_y': 10,
-            'pad_demo': True,
-            'label_pad_y': 5,
-        }
+        plt.plot(x, y,
+            color=color,
+            marker=kwargs.get('marker', 'x'), markeredgecolor=delta(color, -0.3), markersize=8, markeredgewidth=2, markerfacecolor=kwargs.get('facecolors', color),
+            label=plot_label,
+            zorder=kwargs.get('zorder', 0) + 2.5,
+        )
+        plt.scatter(x, y,
+            marker=kwargs.get('marker', 'x'), s=55,
+            edgecolor=delta(color, -0.3), linewidth=1.5, 
+            facecolor=kwargs.get('facecolors', color),
+            zorder=kwargs.get('zorder', 0) + 1e2,
+        )
 
-        further_custom = {**defaults, **kwargs}
+        ax = plt.gca()
 
-        # Connecting lines
-        line(   x=x, y=y,
-                # Figure
-                fig=fig,
-                # Specifics
-                line_width=1,
-                # Color
-                color=color, alpha=0.65,
-                # Arrangement
-                zorder=1,
-                )
-        # Stages
-        scatter(x=x, y=y,
-                # Figure
-                fig=fig,
-                # Further customization
-                plot_label=plot_label,
-                label_x=label_x,
-                label_y=label_y,
-                show=show,
-                **further_custom)
+        if label_x is not None: ax.set_xlabel(label_x)
+        if label_y is not None: ax.set_ylabel(label_y)
 
+        if show:
+            plt.show()
 
 class system(set_of_streams, metaclass=stream_set_constructor):
     """
@@ -1091,10 +1108,10 @@ class system(set_of_streams, metaclass=stream_set_constructor):
         label_y    = label_y_default if isinstance(label_y, type(None)) else label_y
 
         # 1. Create figure
-        figure((9, 5))
+        plt.figure(figsize=(9, 5))
 
         # 2. Create state variable and plotters vectors
-        for stream in self.streams:
+        for i, stream in enumerate(self.streams):
 
             # Plot defaults
             subplot_defaults = {
@@ -1102,18 +1119,18 @@ class system(set_of_streams, metaclass=stream_set_constructor):
                 'label_x': label_x,
                 'label_y': label_y,
                 'color': colorscheme_one()[self.streams.index(stream)],
-                'zorder': self.streams.index(stream),
+                'zorder': self.streams.index(stream)
             }
 
             if colorblind:
-                m      = markers()
+                m      = markers(hollow=True)
                 marker = m[self.streams.index(stream)]
                 subplot_defaults = {**subplot_defaults, **marker}
 
             def gen_plotter(**defaults):
                 """
                 Returns a plotter using the defaults.
-                Any keyword arguemnts passed to the
+                Any keyword arguments passed to the
                 _plot function overwrite the defaults.
                 """
                 return lambda x, y, **kwargs: stream.plot_cycle_graph(x=x, y=y, **{**defaults, **kwargs})
@@ -1144,7 +1161,8 @@ class system(set_of_streams, metaclass=stream_set_constructor):
                             'plot_label': None,
                             'label_x': None,
                             'label_y': None,
-                            'scatter_marker': ''
+                            'marker': '',
+                            'zorder': 0
                         }
 
                         if colorblind:
@@ -1161,19 +1179,13 @@ class system(set_of_streams, metaclass=stream_set_constructor):
         y_system = np.array(y_system, dtype='object')[mask].tolist()
         plotters = np.array(plotters, dtype='object')[mask].tolist()
 
-        # 4. comparison call
-        #     - fig=None, ax=None -> plot_cycle_graph -> fig in **kwargs keys
-        #         - fig=None, ax=None -> line, scatter
-        #             - line, scatter plot onto active figure, axis
-        comparison(
-            x=x_system,
-            y=y_system,
-            f=plotters,
-            legend_loc=(0.865, 0.425),
-            autocolor=False,
-            show=show,
-            **{**kwargs, **defaults}
-        )
+        # 4. Plot all
+        for i, plotter in enumerate(plotters):
+            plotter(x_system[i], y_system[i], **{**kwargs, **defaults})
+
+        plt.legend()
+
+        plt.show()
     
     def plot_T_p(self,
                  show=False,
