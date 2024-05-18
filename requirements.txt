@@ -1,2 +1,2 @@
 numpy
-mpl-plotter>=5.5.0
+matplotlib
