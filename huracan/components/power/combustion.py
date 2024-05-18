@@ -70,13 +70,13 @@ class combustor(component):
 
         self.fmf(gas)
 
-        self.Q = self.fuel.mf*self.eta*self.fuel.LHV      # Heat added to the flow
+        self.Q = self.fuel.mf*self.fuel.LHV      # Heat added to the flow
 
         approx_process_t = deepcopy(gas).heat_exchange(eta=self.eta,
                                                        PI=self.PI,
                                                        cp=gas.cp(gas.t0),
                                                        Q_ex=self.Q).t01
-
+        
         return gas.heat_exchange(eta=self.eta,
                                  PI=self.PI,
                                  cp=gas.cp(approx_process_t),
