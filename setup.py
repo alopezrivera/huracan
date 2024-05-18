@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="huracan",
-    version="1.0.alpha",
+    version="0.9",
     author="Antonio Lopez Rivera",
     author_email="antonlopezr99@gmail.com",
     description="Open source, 0-dimensional, object-oriented airbreathing engine modelling package for preliminary analysis and design of airbreathing engines, divulgation and educational purposes.",
