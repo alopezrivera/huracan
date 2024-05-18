@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: vGPL-3.0-only
 
 """
-Static components
------------------
+Engine channels
+---------------
 """
 
 from huracan.engine import component
@@ -55,6 +55,39 @@ class inlet(intake):
 
         assert not isinstance(eta, type(None)) or not isinstance(PI, type(None)) or not isinstance(TAU, type(None))
 
+
+class bleed_duct(component):
+    """
+    Bleed duct
+    ----------
+    """
+    def __init__(self,
+                 t01,
+                 eta,
+                 PI=1,
+                 ):
+        """
+        :param t01:  Temperature after the bleed duct.
+        :param eta:  Isentropic efficiency.
+        :param PI:   Pressure ratio.
+        """
+
+        self.t01 = t01
+        self.eta = eta
+        self.PI  = PI
+
+    def tf(self, gas):
+
+        dt = self.t01 - gas.t0
+
+        self.Q_out = dt*gas.mf*gas.cp(gas.t0) / self.eta
+
+        return gas.heat_exchange(eta=self.eta,
+                                 PI=self.PI,
+                                 cp=gas.cp(gas.t0),
+                                 Q_ex=self.Q_out,
+                                 )
+    
 
 class nozzle(component):
     """
