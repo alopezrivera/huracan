@@ -4,3 +4,19 @@
 """
 .. include:: ./documentation.md
 """
+
+component_codes = {
+    'fan':                'fn',
+    'prop':               'pr',
+    'propfan':            'pf',
+    'intake':             'it',
+    'inlet':              'il',
+    'compressor':         'cp',
+    'bleed_duct':         'bd',
+    'combustion_chamber': 'cc',
+    'turbine':            'tb',
+    'nozzle':             'nz',
+    'intercooler':        'ic',
+    'recuperator':        'rc',
+    'afterburner':        'ab',
+}

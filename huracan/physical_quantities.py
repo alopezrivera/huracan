@@ -11,7 +11,7 @@ physical_quantities = {
         'Absolute temperature', r'T$_0$ [K]', 1
     ],
     'p0': [
-        'Absolute pressure', 'p$_0$ [kPa]', 1e-3
+        'Absolute pressure', r'p$_0$ [kPa]', 1e-3
     ],
     'V': [
         'Volume', r'v$_0$ [m$^3$/n]', 1

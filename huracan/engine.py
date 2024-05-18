@@ -373,22 +373,8 @@ class stream(set_of_components, metaclass=component_set_constructor):
         if there are more than 1 components of the same class
         in the stream.
         """
-        codes = {'fan':                'fn',
-                 'prop':               'pr',
-                 'propfan':            'pf',
-                 'intake':             'it',
-                 'inlet':              'il',
-                 'compressor':         'cp',
-                 'combustion_chamber': 'cc',
-                 'turbine':            'tb',
-                 'nozzle':             'nz',
-
-                 'intercooler':        'ic',
-                 'recuperator':        'rc',
-                 'afterburner':        'ab',
-                 }
-
-        code = codes[c.__class__.__name__] + self.n_instances(c)
+        
+        code = component_codes[c.__class__.__name__] + self.n_instances(c)
 
         return f'{".".join([str(c) for c in self.stream_id])}.{code}'
 
